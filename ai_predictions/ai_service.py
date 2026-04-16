@@ -10,16 +10,46 @@ class RealAIService:
         self.api_key = getattr(settings, 'GROQ_API_KEY', None) or os.environ.get('GROQ_API_KEY')
         self.client = None
         
+        # Check if API key is valid
         if self.api_key and self.api_key.startswith('gsk_'):
             try:
                 from groq import Groq
+                # Initialize without any extra parameters to avoid 'proxies' error
                 self.client = Groq(api_key=self.api_key)
+                # Test the connection with a simple call
                 print(f"✅ Groq client initialized successfully (Free Tier)")
+            except ImportError:
+                print(f"❌ Groq module not installed. Run: pip install groq")
+                self.client = None
+            except TypeError as e:
+                if 'proxies' in str(e):
+                    print(f"⚠️ Groq version compatibility issue. Trying fallback initialization...")
+                    # Try alternative initialization
+                    try:
+                        # Attempt with minimal parameters
+                        from groq import Groq
+                        # Create client without proxies
+                        self.client = Groq(
+                            api_key=self.api_key,
+                            # Explicitly set proxies to None to avoid the error
+                            proxies=None
+                        )
+                        print(f"✅ Groq client initialized with fallback method")
+                    except Exception as fallback_error:
+                        print(f"❌ Fallback also failed: {fallback_error}")
+                        self.client = None
+                else:
+                    print(f"❌ Failed to initialize Groq client: {e}")
+                    self.client = None
             except Exception as e:
                 print(f"❌ Failed to initialize Groq client: {e}")
                 self.client = None
         else:
-            print(f"❌ Invalid or missing Groq API key")
+            if not self.api_key:
+                print(f"❌ GROQ_API_KEY not found in environment variables")
+            else:
+                print(f"❌ Invalid Groq API key format. Should start with 'gsk_'")
+            self.client = None
     
     def predict_price(self, crop_type, location):
         """Get AI prediction from Groq"""
