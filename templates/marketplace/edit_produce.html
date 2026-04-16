@@ -1,0 +1,541 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block page_title %}Edit Produce{% endblock %}
+
+{% block dashboard_content %}
+<style>
+    .edit-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    
+    .form-card {
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    
+    .form-header {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        padding: 1.5rem 2rem;
+        color: white;
+    }
+    
+    .form-header h2 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+    
+    .form-header p {
+        font-size: 0.875rem;
+        opacity: 0.9;
+        margin-bottom: 0;
+    }
+    
+    .form-body {
+        padding: 2rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .form-group label .required {
+        color: #dc3545;
+        margin-left: 0.25rem;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        font-size: 0.875rem;
+        transition: all 0.2s;
+        font-family: inherit;
+        background-color: white;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(0,200,83,0.1);
+    }
+    
+    select.form-control {
+        cursor: pointer;
+        background-color: white;
+        appearance: none;
+        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>');
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        padding-right: 2.5rem;
+    }
+    
+    textarea.form-control {
+        resize: vertical;
+        min-height: 100px;
+    }
+    
+    input[type="file"].form-control {
+        padding: 0.5rem;
+        background-color: var(--bg-light);
+    }
+    
+    .help-text {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-top: 0.5rem;
+    }
+    
+    .error-text {
+        color: #dc3545;
+        font-size: 0.7rem;
+        margin-top: 0.5rem;
+    }
+    
+    /* Image Preview Section */
+    .image-section {
+        margin-bottom: 1.5rem;
+    }
+    
+    .current-image {
+        background-color: var(--bg-light);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .current-image-label {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        margin-bottom: 0.75rem;
+        text-transform: uppercase;
+    }
+    
+    .current-image-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .current-image-preview {
+        position: relative;
+        display: inline-block;
+    }
+    
+    .current-image-preview img {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 12px;
+        border: 2px solid var(--border);
+    }
+    
+    .image-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .btn-remove-image {
+        padding: 0.4rem 0.8rem;
+        background-color: transparent;
+        border: 1px solid #dc3545;
+        color: #dc3545;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .btn-remove-image:hover {
+        background-color: rgba(220,53,69,0.1);
+    }
+    
+    /* New Image Preview */
+    .new-image-preview {
+        margin-top: 1rem;
+        padding: 1rem;
+        background-color: var(--bg-light);
+        border-radius: 12px;
+        display: none;
+    }
+    
+    .new-image-preview.active {
+        display: block;
+    }
+    
+    .preview-image {
+        max-width: 150px;
+        max-height: 150px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+    }
+    
+    .preview-info {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-top: 0.5rem;
+    }
+    
+    /* Form Row */
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+    
+    /* Form Actions */
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border);
+    }
+    
+    .btn-save {
+        flex: 1;
+        padding: 0.75rem 1.5rem;
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .btn-save:hover {
+        background-color: var(--primary-dark);
+        transform: translateY(-1px);
+    }
+    
+    .btn-cancel {
+        flex: 1;
+        padding: 0.75rem 1.5rem;
+        background-color: transparent;
+        border: 1px solid var(--border);
+        color: var(--text-dark);
+        border-radius: 10px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+        transition: all 0.2s;
+    }
+    
+    .btn-cancel:hover {
+        background-color: var(--bg-light);
+    }
+    
+    @media (max-width: 768px) {
+        .form-body {
+            padding: 1.5rem;
+        }
+        
+        .form-row {
+            grid-template-columns: 1fr;
+            gap: 0;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+        
+        .current-image-wrapper {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>
+
+<div class="edit-container">
+    <div class="form-card">
+        <div class="form-header">
+            <h2>Edit Produce</h2>
+            <p>Update your product information and images</p>
+        </div>
+        
+        <div class="form-body">
+            <form method="post" enctype="multipart/form-data" id="editForm">
+                {% csrf_token %}
+                
+                <!-- Product Name -->
+                <div class="form-group">
+                    <label for="id_name">Product Name <span class="required">*</span></label>
+                    <input type="text" name="name" id="id_name" class="form-control" value="{{ form.name.value|default:'' }}" required>
+                    {% if form.name.errors %}
+                        {% for error in form.name.errors %}
+                            <div class="error-text">{{ error }}</div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                
+                <!-- Category and Unit Row -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="id_category">Category <span class="required">*</span></label>
+                        {{ form.category }}
+                        {% if form.category.errors %}
+                            {% for error in form.category.errors %}
+                                <div class="error-text">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_unit">Unit <span class="required">*</span></label>
+                        {{ form.unit }}
+                        {% if form.unit.errors %}
+                            {% for error in form.unit.errors %}
+                                <div class="error-text">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Description -->
+                <div class="form-group">
+                    <label for="id_description">Description</label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                        {% for error in form.description.errors %}
+                            <div class="error-text">{{ error }}</div>
+                        {% endfor %}
+                    {% endif %}
+                    <div class="help-text">Describe your produce, including quality, freshness, and any special features.</div>
+                </div>
+                
+                <!-- Quantity and Price Row -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="id_quantity">Quantity <span class="required">*</span></label>
+                        <input type="number" name="quantity" id="id_quantity" class="form-control" step="0.01" value="{{ form.quantity.value|default:'' }}" required>
+                        {% if form.quantity.errors %}
+                            {% for error in form.quantity.errors %}
+                                <div class="error-text">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_price">Price (KES) <span class="required">*</span></label>
+                        <input type="number" name="price" id="id_price" class="form-control" step="0.01" value="{{ form.price.value|default:'' }}" required>
+                        {% if form.price.errors %}
+                            {% for error in form.price.errors %}
+                                <div class="error-text">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Location and Status Row -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="id_location">Location <span class="required">*</span></label>
+                        <input type="text" name="location" id="id_location" class="form-control" value="{{ form.location.value|default:'' }}" required>
+                        {% if form.location.errors %}
+                            {% for error in form.location.errors %}
+                                <div class="error-text">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_status">Status</label>
+                        {{ form.status }}
+                        {% if form.status.errors %}
+                            {% for error in form.status.errors %}
+                                <div class="error-text">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Image Section -->
+                <div class="image-section">
+                    <div class="current-image">
+                        <div class="current-image-label">Current Image</div>
+                        <div class="current-image-wrapper">
+                            <div class="current-image-preview">
+                                {% if produce.image %}
+                                    <img src="{{ produce.image.url }}" alt="{{ produce.name }}" id="currentImage">
+                                {% else %}
+                                    <div style="width: 100px; height: 100px; background: var(--bg-light); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--text-muted);">No image</div>
+                                {% endif %}
+                            </div>
+                            <div class="image-actions">
+                                <button type="button" class="btn-remove-image" id="removeImageBtn" {% if not produce.image %}style="display: none;"{% endif %}>
+                                    Remove Image
+                                </button>
+                                <input type="hidden" name="remove_image" id="removeImage" value="false">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_image">Change Image</label>
+                        <input type="file" name="image" id="id_image" class="form-control" accept="image/*">
+                        <div class="help-text">Upload a new image (JPG, PNG, GIF, WEBP). Max size 5MB.</div>
+                        {% if form.image.errors %}
+                            {% for error in form.image.errors %}
+                                <div class="error-text">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <!-- New Image Preview -->
+                    <div id="newImagePreview" class="new-image-preview">
+                        <div class="current-image-label">New Image Preview</div>
+                        <img id="previewImg" class="preview-image" src="#" alt="Preview">
+                        <div id="previewInfo" class="preview-info"></div>
+                    </div>
+                </div>
+                
+                <!-- Video URL (Optional) -->
+                <div class="form-group">
+                    <label for="id_video_url">Video URL (Optional)</label>
+                    <input type="url" name="video_url" id="id_video_url" class="form-control" value="{{ form.video_url.value|default:'' }}" placeholder="https://example.com/video.mp4">
+                    <div class="help-text">Add a video URL to showcase your produce (YouTube, Vimeo, or direct video link).</div>
+                    {% if form.video_url.errors %}
+                        {% for error in form.video_url.errors %}
+                            <div class="error-text">{{ error }}</div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <button type="submit" class="btn-save">Update Product</button>
+                    <a href="{% url 'produce_detail' produce.id %}" class="btn-cancel">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Image preview functionality
+    const imageInput = document.getElementById('id_image');
+    const previewContainer = document.getElementById('newImagePreview');
+    const previewImg = document.getElementById('previewImg');
+    const previewInfo = document.getElementById('previewInfo');
+    const removeImageBtn = document.getElementById('removeImageBtn');
+    const removeImageField = document.getElementById('removeImage');
+    const currentImage = document.getElementById('currentImage');
+    
+    // Preview new image
+    if (imageInput) {
+        imageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Validate file size (max 5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('File is too large! Maximum size is 5MB.');
+                    this.value = '';
+                    previewContainer.classList.remove('active');
+                    return;
+                }
+                
+                // Validate file type
+                const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+                if (!validTypes.includes(file.type)) {
+                    alert('Invalid file type! Please upload JPG, PNG, GIF, or WEBP.');
+                    this.value = '';
+                    previewContainer.classList.remove('active');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    previewImg.src = event.target.result;
+                    previewInfo.innerHTML = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+                    previewContainer.classList.add('active');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                previewContainer.classList.remove('active');
+            }
+        });
+    }
+    
+    // Remove image functionality
+    if (removeImageBtn) {
+        removeImageBtn.addEventListener('click', function() {
+            if (confirm('Are you sure you want to remove the current image?')) {
+                removeImageField.value = 'true';
+                if (currentImage) {
+                    currentImage.style.opacity = '0.3';
+                }
+                this.style.opacity = '0.5';
+                this.disabled = true;
+                this.textContent = 'Image will be removed on save';
+                
+                // Clear file input if any
+                if (imageInput) {
+                    imageInput.value = '';
+                    previewContainer.classList.remove('active');
+                }
+            }
+        });
+    }
+    
+    // Form validation before submit
+    document.getElementById('editForm').addEventListener('submit', function(e) {
+        const name = document.getElementById('id_name').value.trim();
+        const price = document.getElementById('id_price').value;
+        const quantity = document.getElementById('id_quantity').value;
+        const location = document.getElementById('id_location').value.trim();
+        
+        if (!name) {
+            e.preventDefault();
+            alert('Please enter a product name');
+            document.getElementById('id_name').focus();
+            return false;
+        }
+        
+        if (!price || parseFloat(price) <= 0) {
+            e.preventDefault();
+            alert('Please enter a valid price');
+            document.getElementById('id_price').focus();
+            return false;
+        }
+        
+        if (!quantity || parseFloat(quantity) <= 0) {
+            e.preventDefault();
+            alert('Please enter a valid quantity');
+            document.getElementById('id_quantity').focus();
+            return false;
+        }
+        
+        if (!location) {
+            e.preventDefault();
+            alert('Please enter a location');
+            document.getElementById('id_location').focus();
+            return false;
+        }
+        
+        return true;
+    });
+</script>
+{% endblock %}

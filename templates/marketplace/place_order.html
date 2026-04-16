@@ -1,0 +1,161 @@
+{% extends 'dashboard_base.html' %}
+
+{% block page_title %}Place Order{% endblock %}
+
+{% block dashboard_content %}
+<div class="container">
+    <div class="card">
+        <div class="card-title">Order Details</div>
+        
+        <!-- Product Information -->
+        <div style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border);">
+            <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">{{ produce.name }}</h3>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem;">
+                <span style="background: var(--bg-light); padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.8rem;">
+                    Price: KES {{ produce.price }} per {{ produce.unit }}
+                </span>
+                <span style="background: var(--bg-light); padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.8rem;">
+                    Available: {{ produce.quantity }} {{ produce.unit }}
+                </span>
+                <span style="background: var(--bg-light); padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.8rem;">
+                    Seller: {{ produce.seller.username }}
+                </span>
+            </div>
+        </div>
+        
+        <!-- Order Form -->
+        <form method="post">
+            {% csrf_token %}
+            
+            <!-- Quantity Field -->
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-weight: 500; margin-bottom: 0.5rem;">Quantity ({{ produce.unit }})</label>
+                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                    <button type="button" id="decreaseQty" style="width: 36px; height: 36px; background: var(--bg-light); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 1.2rem;">-</button>
+                    <input type="number" name="quantity" id="quantity" class="form-control" 
+                           style="width: 120px; text-align: center; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px;"
+                           min="0.01" max="{{ produce.quantity }}" step="0.01" value="1" required>
+                    <button type="button" id="increaseQty" style="width: 36px; height: 36px; background: var(--bg-light); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 1.2rem;">+</button>
+                    <span id="totalPreview" style="margin-left: 1rem; font-weight: 600; color: var(--primary);">
+                        Total: KES {{ produce.price }}
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Delivery Address -->
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-weight: 500; margin-bottom: 0.5rem;">Delivery Address</label>
+                <textarea name="delivery_address" class="form-control" rows="3" required
+                          style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; resize: vertical;"
+                          placeholder="Enter your full delivery address with landmark"></textarea>
+            </div>
+            
+            <!-- Notes -->
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-weight: 500; margin-bottom: 0.5rem;">Notes (Optional)</label>
+                <textarea name="notes" class="form-control" rows="2"
+                          style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; resize: vertical;"
+                          placeholder="Any special instructions for delivery..."></textarea>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <button type="submit" style="background: var(--primary); color: white; border: none; padding: 0.75rem 2rem; border-radius: 30px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                    Place Order
+                </button>
+                <a href="/marketplace/produce/{{ produce.id }}/" style="background: var(--gold); color: #2c2c2c; text-decoration: none; padding: 0.75rem 2rem; border-radius: 30px; font-weight: 600; text-align: center; display: inline-block;">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(0,200,83,0.1);
+    }
+    
+    button:active {
+        transform: scale(0.98);
+    }
+    
+    @media (max-width: 768px) {
+        .container {
+            padding: 0;
+        }
+        
+        button, a {
+            flex: 1;
+            text-align: center;
+        }
+    }
+</style>
+
+<script>
+    (function() {
+        const quantityInput = document.getElementById('quantity');
+        const decreaseBtn = document.getElementById('decreaseQty');
+        const increaseBtn = document.getElementById('increaseQty');
+        const totalPreview = document.getElementById('totalPreview');
+        
+        const unitPrice = {{ produce.price }};
+        const maxQuantity = {{ produce.quantity }};
+        const step = 0.01;
+        
+        function updateTotal() {
+            let qty = parseFloat(quantityInput.value);
+            if (isNaN(qty) || qty < 0.01) qty = 0.01;
+            if (qty > maxQuantity) qty = maxQuantity;
+            quantityInput.value = qty.toFixed(2);
+            const total = (unitPrice * qty).toFixed(2);
+            totalPreview.textContent = 'Total: KES ' + total;
+        }
+        
+        if (decreaseBtn) {
+            decreaseBtn.addEventListener('click', function() {
+                let val = parseFloat(quantityInput.value);
+                if (!isNaN(val) && val > 0.01) {
+                    let newVal = val - step;
+                    if (newVal < 0.01) newVal = 0.01;
+                    quantityInput.value = newVal.toFixed(2);
+                    updateTotal();
+                }
+            });
+        }
+        
+        if (increaseBtn) {
+            increaseBtn.addEventListener('click', function() {
+                let val = parseFloat(quantityInput.value);
+                if (!isNaN(val) && val < maxQuantity) {
+                    let newVal = val + step;
+                    if (newVal > maxQuantity) newVal = maxQuantity;
+                    quantityInput.value = newVal.toFixed(2);
+                    updateTotal();
+                }
+            });
+        }
+        
+        if (quantityInput) {
+            quantityInput.addEventListener('input', updateTotal);
+            quantityInput.addEventListener('change', function() {
+                let val = parseFloat(this.value);
+                if (isNaN(val)) val = 1;
+                if (val < 0.01) val = 0.01;
+                if (val > maxQuantity) val = maxQuantity;
+                this.value = val.toFixed(2);
+                updateTotal();
+            });
+        }
+        
+        updateTotal();
+    })();
+</script>
+{% endblock %}

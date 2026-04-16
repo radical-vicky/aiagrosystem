@@ -1,0 +1,525 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block page_title %}AI Insights{% endblock %}
+
+{% block dashboard_content %}
+<style>
+    .insights-header {
+        margin-bottom: 1.5rem;
+    }
+    
+    .insights-header h2 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+    
+    .insights-header p {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+    }
+    
+    .prediction-form {
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .form-group {
+        flex: 1;
+        min-width: 200px;
+    }
+    
+    .form-group label {
+        display: block;
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        margin-bottom: 0.25rem;
+        text-transform: uppercase;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 0.875rem;
+        transition: all 0.2s;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px rgba(0,200,83,0.1);
+    }
+    
+    .btn-predict {
+        padding: 0.5rem 1.5rem;
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+        margin-top: 1.5rem;
+    }
+    
+    .btn-predict:hover {
+        background-color: var(--primary-dark);
+    }
+    
+    /* Quick Products */
+    .quick-products {
+        margin-bottom: 1rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .quick-product {
+        padding: 0.25rem 0.75rem;
+        background: transparent;
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        font-size: 0.7rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .quick-product:hover {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+    
+    /* Loading State */
+    .loading-state {
+        text-align: center;
+        padding: 2rem;
+    }
+    
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid var(--border);
+        border-top-color: var(--primary);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1rem;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    /* Results Card */
+    .results-card {
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-top: 1.5rem;
+    }
+    
+    .result-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .result-product {
+        font-size: 1rem;
+        font-weight: 600;
+    }
+    
+    .result-location {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+    
+    .price-box {
+        background: var(--bg-light);
+        border-radius: 12px;
+        padding: 1rem;
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+    
+    .price-label {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-bottom: 0.25rem;
+    }
+    
+    .price-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--primary);
+    }
+    
+    .confidence-bar {
+        background: var(--border);
+        border-radius: 4px;
+        height: 6px;
+        margin-top: 0.5rem;
+        overflow: hidden;
+    }
+    
+    .confidence-fill {
+        width: 0%;
+        height: 100%;
+        background: var(--primary);
+        border-radius: 4px;
+        transition: width 0.3s;
+    }
+    
+    .analysis-text {
+        background: var(--bg-light);
+        padding: 1rem;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        font-size: 0.875rem;
+        line-height: 1.6;
+    }
+    
+    .recommendation-box {
+        background: rgba(0,200,83,0.05);
+        border-left: 3px solid var(--primary);
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+    
+    .recommendation-title {
+        font-weight: 600;
+        font-size: 0.75rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .demand-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+    
+    .demand-high {
+        background: rgba(0,200,83,0.1);
+        color: var(--primary);
+    }
+    
+    .demand-medium {
+        background: rgba(255,215,0,0.1);
+        color: #b8860b;
+    }
+    
+    .demand-low {
+        background: rgba(220,53,69,0.1);
+        color: #dc3545;
+    }
+    
+    .dropdown {
+        position: relative;
+    }
+    
+    .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 100;
+        display: none;
+    }
+    
+    .dropdown-item {
+        padding: 0.5rem 0.75rem;
+        cursor: pointer;
+        font-size: 0.875rem;
+    }
+    
+    .dropdown-item:hover {
+        background: var(--bg-light);
+    }
+    
+    @media (max-width: 768px) {
+        .form-row {
+            flex-direction: column;
+        }
+        
+        .price-value {
+            font-size: 1.25rem;
+        }
+    }
+</style>
+
+<div class="insights-header">
+    <h2>AI Market Intelligence</h2>
+    <p>Get AI-powered price predictions and market analysis for agricultural products</p>
+</div>
+
+<!-- Prediction Form -->
+<div class="prediction-form">
+    <div class="form-row">
+        <div class="form-group">
+            <label>Product</label>
+            <div class="dropdown">
+                <input type="text" id="productSearch" class="form-control" placeholder="Search product..." autocomplete="off">
+                <div id="productDropdown" class="dropdown-menu"></div>
+                <input type="hidden" id="selectedProduct">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>County</label>
+            <select id="locationSelect" class="form-control">
+                <option value="">Select County</option>
+                <option value="Kisumu County">Kisumu County</option>
+                <option value="Siaya County">Siaya County</option>
+                <option value="Homa Bay County">Homa Bay County</option>
+                <option value="Kakamega County">Kakamega County</option>
+                <option value="Nairobi County">Nairobi County</option>
+                <option value="Nakuru County">Nakuru County</option>
+                <option value="Kiambu County">Kiambu County</option>
+                <option value="Mombasa County">Mombasa County</option>
+            </select>
+        </div>
+    </div>
+    
+    <div class="quick-products">
+        <span style="font-size: 0.7rem; color: var(--text-muted); margin-right: 0.5rem;">Popular:</span>
+        <button type="button" class="quick-product" data-product="Maize">Maize</button>
+        <button type="button" class="quick-product" data-product="Beans">Beans</button>
+        <button type="button" class="quick-product" data-product="Tomatoes">Tomatoes</button>
+        <button type="button" class="quick-product" data-product="Onions">Onions</button>
+        <button type="button" class="quick-product" data-product="Potatoes">Potatoes</button>
+        <button type="button" class="quick-product" data-product="Avocado">Avocado</button>
+        <button type="button" class="quick-product" data-product="Eggs">Eggs</button>
+        <button type="button" class="quick-product" data-product="Milk">Milk</button>
+    </div>
+    
+    <button type="button" id="predictBtn" class="btn-predict">Generate Prediction</button>
+</div>
+
+<!-- Loading State -->
+<div id="loadingState" class="loading-state" style="display: none;">
+    <div class="spinner"></div>
+    <div style="color: var(--text-muted);">AI is analyzing market data...</div>
+</div>
+
+<!-- Results -->
+<div id="resultsCard" style="display: none;">
+    <div class="results-card">
+        <div class="result-header">
+            <div>
+                <div class="result-product" id="productName">-</div>
+                <div class="result-location" id="productLocation">-</div>
+            </div>
+            <div>
+                <span id="confidenceValue" style="font-size: 0.75rem; color: var(--text-muted);">Confidence: 0%</span>
+            </div>
+        </div>
+        
+        <div class="price-box">
+            <div class="price-label">Predicted Price</div>
+            <div class="price-value" id="predictedPrice">KES 0</div>
+            <div class="confidence-bar">
+                <div class="confidence-fill" id="confidenceBar"></div>
+            </div>
+        </div>
+        
+        <div class="analysis-text" id="aiAnalysis">
+            AI analysis will appear here...
+        </div>
+        
+        <div class="recommendation-box">
+            <div class="recommendation-title">Recommendation</div>
+            <div id="recommendation">Select a product and location to get AI-powered insights.</div>
+        </div>
+        
+        <div>
+            <span class="demand-badge" id="demandLevel"></span>
+        </div>
+    </div>
+</div>
+
+<script>
+    const allProducts = [
+        'Maize', 'Beans', 'Tomatoes', 'Onions', 'Potatoes', 'Cabbage',
+        'Kale', 'Carrots', 'Spinach', 'Capsicum', 'Bananas', 'Oranges',
+        'Mangoes', 'Avocado', 'Pineapples', 'Watermelon', 'Eggs', 'Milk',
+        'Honey', 'Fish', 'Chicken', 'Rice', 'Wheat'
+    ];
+    
+    const productInput = document.getElementById('productSearch');
+    const productDropdown = document.getElementById('productDropdown');
+    const selectedProduct = document.getElementById('selectedProduct');
+    
+    function filterProducts(searchTerm) {
+        if (!searchTerm || searchTerm.trim() === '') return allProducts;
+        const term = searchTerm.toLowerCase();
+        return allProducts.filter(p => p.toLowerCase().includes(term));
+    }
+    
+    function renderDropdown(products) {
+        if (products.length === 0) {
+            productDropdown.innerHTML = '<div class="dropdown-item" style="color: var(--text-muted);">No products found</div>';
+            return;
+        }
+        
+        productDropdown.innerHTML = products.map(p => 
+            `<div class="dropdown-item" data-product="${p}">${p}</div>`
+        ).join('');
+        
+        document.querySelectorAll('.dropdown-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const product = this.getAttribute('data-product');
+                productInput.value = product;
+                selectedProduct.value = product;
+                productDropdown.style.display = 'none';
+            });
+        });
+    }
+    
+    productInput.addEventListener('focus', () => {
+        const products = filterProducts(productInput.value);
+        renderDropdown(products);
+        productDropdown.style.display = 'block';
+        productDropdown.style.width = productInput.offsetWidth + 'px';
+    });
+    
+    productInput.addEventListener('input', () => {
+        const products = filterProducts(productInput.value);
+        renderDropdown(products);
+        productDropdown.style.display = 'block';
+        if (productInput.value !== selectedProduct.value) {
+            selectedProduct.value = '';
+        }
+    });
+    
+    productInput.addEventListener('blur', () => {
+        setTimeout(() => {
+            productDropdown.style.display = 'none';
+        }, 200);
+    });
+    
+    // Quick product buttons
+    document.querySelectorAll('.quick-product').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const product = this.getAttribute('data-product');
+            productInput.value = product;
+            selectedProduct.value = product;
+            productDropdown.style.display = 'none';
+        });
+    });
+    
+    const predictBtn = document.getElementById('predictBtn');
+    const locationSelect = document.getElementById('locationSelect');
+    const loadingState = document.getElementById('loadingState');
+    const resultsCard = document.getElementById('resultsCard');
+    
+    predictBtn.addEventListener('click', async function() {
+        const product = selectedProduct.value || productInput.value;
+        const location = locationSelect.value;
+        
+        if (!product || product === '') {
+            alert('Please select a product');
+            return;
+        }
+        
+        if (!location) {
+            alert('Please select a location');
+            return;
+        }
+        
+        loadingState.style.display = 'block';
+        resultsCard.style.display = 'none';
+        predictBtn.disabled = true;
+        
+        try {
+            const response = await fetch('/ai/api/predict/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    crop_type: product,
+                    location: location
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                document.getElementById('productName').textContent = data.crop;
+                document.getElementById('productLocation').textContent = location;
+                document.getElementById('predictedPrice').innerHTML = `KES ${data.predicted_price}`;
+                document.getElementById('confidenceValue').innerHTML = `Confidence: ${data.confidence}%`;
+                document.getElementById('confidenceBar').style.width = `${data.confidence}%`;
+                document.getElementById('aiAnalysis').innerHTML = data.analysis.replace(/\n/g, '<br>');
+                document.getElementById('recommendation').innerHTML = data.recommendation;
+                
+                const demandSpan = document.getElementById('demandLevel');
+                if (data.demand_level === 'high') {
+                    demandSpan.innerHTML = 'High Demand';
+                    demandSpan.className = 'demand-badge demand-high';
+                } else if (data.demand_level === 'medium') {
+                    demandSpan.innerHTML = 'Medium Demand';
+                    demandSpan.className = 'demand-badge demand-medium';
+                } else {
+                    demandSpan.innerHTML = 'Low Demand';
+                    demandSpan.className = 'demand-badge demand-low';
+                }
+                
+                resultsCard.style.display = 'block';
+                resultsCard.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                alert('Failed to get prediction. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Network error. Please try again.');
+        } finally {
+            loadingState.style.display = 'none';
+            predictBtn.disabled = false;
+        }
+    });
+    
+    function getCookie(name) {
+        let value = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                cookie = cookie.trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    value = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return value;
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="bi bi-graph-up"></i> My Statistics</h4>
+                </div>
+                <div class="card-body">
+                    {% if user.profile.role == 'farmer' %}
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="card bg-primary text-white text-center">
+                                <div class="card-body">
+                                    <h5>Total Products</h5>
+                                    <h2>{{ total_products|default:"0" }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card bg-success text-white text-center">
+                                <div class="card-body">
+                                    <h5>Total Revenue</h5>
+                                    <h2>KES {{ total_revenue|default:"0"|floatformat:0 }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card bg-info text-white text-center">
+                                <div class="card-body">
+                                    <h5>Total Orders</h5>
+                                    <h2>{{ total_orders|default:"0" }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5>Inventory Value</h5>
+                                    <p class="display-6 text-success">KES {{ total_value|default:"0"|floatformat:0 }}</p>
+                                    <small>Total value of all your produce listings</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5>Average Order Value</h5>
+                                    <p class="display-6 text-primary">KES {{ avg_order_value|default:"0"|floatformat:0 }}</p>
+                                    <small>Average value per order</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% elif user.profile.role == 'buyer' %}
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="card bg-primary text-white text-center">
+                                <div class="card-body">
+                                    <h5>Total Orders</h5>
+                                    <h2>{{ total_orders|default:"0" }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card bg-success text-white text-center">
+                                <div class="card-body">
+                                    <h5>Total Spent</h5>
+                                    <h2>KES {{ total_spent|default:"0"|floatformat:0 }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card bg-info text-white text-center">
+                                <div class="card-body">
+                                    <h5>Active Orders</h5>
+                                    <h2>{{ active_orders|default:"0" }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-graph-up fs-1 text-muted"></i>
+                        <h4 class="mt-3">No Statistics Available</h4>
+                        <p>Please register as a farmer or buyer to see your statistics.</p>
+                        <a href="{% url 'dashboard' %}" class="btn btn-primary">Go to Dashboard</a>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mt-4 text-center">
+                        <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

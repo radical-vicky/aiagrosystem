@@ -1,0 +1,305 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block page_title %}My Profile{% endblock %}
+
+{% block dashboard_content %}
+<style>
+    .profile-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    
+    .profile-header {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border);
+        flex-wrap: wrap;
+    }
+    
+    .profile-avatar {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+    
+    .profile-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .profile-avatar span {
+        font-size: 2rem;
+        font-weight: 600;
+        color: white;
+    }
+    
+    .profile-title h2 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+    
+    .profile-title p {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+    
+    .profile-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+    
+    .info-card {
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 1.25rem;
+    }
+    
+    .info-card h3 {
+        font-size: 0.875rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid var(--border);
+        color: var(--primary);
+    }
+    
+    .info-row {
+        display: flex;
+        margin-bottom: 1rem;
+    }
+    
+    .info-label {
+        width: 100px;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        flex-shrink: 0;
+    }
+    
+    .info-value {
+        font-size: 0.875rem;
+        color: var(--text-dark);
+        font-weight: 500;
+    }
+    
+    .bio-text {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        line-height: 1.5;
+        margin-top: 0.5rem;
+    }
+    
+    .edit-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    
+    .edit-btn:hover {
+        background-color: var(--primary-dark);
+        transform: translateY(-1px);
+    }
+    
+    .change-password-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background-color: transparent;
+        color: var(--text-dark);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    
+    .change-password-btn:hover {
+        background-color: var(--bg-light);
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-top: 0.5rem;
+    }
+    
+    @media (max-width: 768px) {
+        .profile-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .info-row {
+            flex-direction: column;
+        }
+        
+        .info-label {
+            width: auto;
+            margin-bottom: 0.25rem;
+        }
+    }
+</style>
+
+<div class="profile-container">
+    <!-- Profile Header -->
+    <div class="profile-header">
+        <div class="profile-avatar">
+            {% if user.profile.profile_picture %}
+                <img src="{{ user.profile.profile_picture.url }}" alt="{{ user.username }}">
+            {% else %}
+                <span>{{ user.username|make_list|first|upper }}</span>
+            {% endif %}
+        </div>
+        <div class="profile-title">
+            <h2>{{ user.get_full_name|default:user.username }}</h2>
+            <p>{{ user.profile.role|title }} • Member since {{ user.date_joined|date:"M Y" }}</p>
+        </div>
+        <div class="action-buttons" style="margin-left: auto;">
+            <a href="{% url 'edit_profile' %}" class="edit-btn">Edit Profile</a>
+            <a href="{% url 'change_password' %}" class="change-password-btn">Change Password</a>
+        </div>
+    </div>
+    
+    <!-- Profile Info Grid -->
+    <div class="profile-grid">
+        <!-- Personal Information Card -->
+        <div class="info-card">
+            <h3>Personal Information</h3>
+            <div class="info-row">
+                <div class="info-label">Full Name</div>
+                <div class="info-value">{{ user.get_full_name|default:"Not set" }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Email</div>
+                <div class="info-value">{{ user.email }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Phone</div>
+                <div class="info-value">{{ user.profile.phone_number|default:"Not set" }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Location</div>
+                <div class="info-value">{{ user.profile.location|default:"Not set" }}</div>
+            </div>
+        </div>
+        
+        <!-- Farm Information Card (for farmers) -->
+        {% if user.profile.role == 'farmer' and farmer_details %}
+        <div class="info-card">
+            <h3>Farm Information</h3>
+            <div class="info-row">
+                <div class="info-label">Farm Name</div>
+                <div class="info-value">{{ farmer_details.farm_name }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Farm Location</div>
+                <div class="info-value">{{ farmer_details.farm_location }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Farm Size</div>
+                <div class="info-value">{{ farmer_details.farm_size }} acres</div>
+            </div>
+            {% if farmer_details.certification %}
+            <div class="info-row">
+                <div class="info-label">Certification</div>
+                <div class="info-value">{{ farmer_details.certification }}</div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <!-- Buyer Information Card (for buyers) -->
+        {% if user.profile.role == 'buyer' and buyer_details %}
+        <div class="info-card">
+            <h3>Buyer Information</h3>
+            {% if buyer_details.company_name %}
+            <div class="info-row">
+                <div class="info-label">Company</div>
+                <div class="info-value">{{ buyer_details.company_name }}</div>
+            </div>
+            {% endif %}
+            {% if buyer_details.business_registration %}
+            <div class="info-row">
+                <div class="info-label">Business Reg</div>
+                <div class="info-value">{{ buyer_details.business_registration }}</div>
+            </div>
+            {% endif %}
+            {% if buyer_details.preferred_categories %}
+            <div class="info-row">
+                <div class="info-label">Preferences</div>
+                <div class="info-value">{{ buyer_details.preferred_categories }}</div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <!-- Statistics Card -->
+        <div class="info-card">
+            <h3>Statistics</h3>
+            {% if user.profile.role == 'farmer' %}
+            <div class="info-row">
+                <div class="info-label">Total Products</div>
+                <div class="info-value">{{ total_products|default:"0" }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Orders Received</div>
+                <div class="info-value">{{ total_orders_received|default:"0" }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Total Sales</div>
+                <div class="info-value">KES {{ total_sales|default:"0"|floatformat:0 }}</div>
+            </div>
+            {% elif user.profile.role == 'buyer' %}
+            <div class="info-row">
+                <div class="info-label">Total Orders</div>
+                <div class="info-value">{{ total_orders|default:"0" }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Total Spent</div>
+                <div class="info-value">KES {{ total_spent|default:"0"|floatformat:0 }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Member Since</div>
+                <div class="info-value">{{ user.date_joined|date:"F j, Y" }}</div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Bio Card -->
+        <div class="info-card">
+            <h3>Bio</h3>
+            <div class="bio-text">
+                {% if user.profile.bio %}
+                    {{ user.profile.bio }}
+                {% else %}
+                    No bio provided yet. Click "Edit Profile" to add your bio.
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

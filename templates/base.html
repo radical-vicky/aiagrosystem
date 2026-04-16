@@ -1,0 +1,816 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>AIAGROSYSTEM - AI-Powered Agricultural Marketplace</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #296807;
+            --primary-dark: #1f5205;
+            --primary-light: #3a8a0a;
+            --primary-bg: #ebf5e6;
+            --gold: #f5b81b;
+            --gold-dark: #e0a800;
+            --text-dark: #24292f;
+            --text-muted: #57606a;
+            --text-light: #6e7781;
+            --border: rgba(255, 255, 255, 0.35);
+            --border-light: rgba(255, 255, 255, 0.2);
+            --bg-light: rgba(246, 248, 250, 0.55);
+            --bg-white: rgba(255, 255, 255, 0.7);
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+            --shadow-lg: 0 12px 28px rgba(0,0,0,0.12);
+            --radius: 10px;
+            --radius-lg: 16px;
+            --blur: blur(12px);
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #eef5ea 0%, #d9e6d0 100%);
+            color: var(--text-dark);
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        main {
+            flex: 1;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+        
+        /* ========== GLASS MORPHISM NAVBAR ========== */
+        .navbar {
+            background: rgba(255, 255, 255, 0.62);
+            backdrop-filter: var(--blur);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.45);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            width: 100%;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+        }
+        
+        .nav-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 60px;
+            width: 100%;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+        
+        .logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            text-decoration: none;
+            letter-spacing: -0.3px;
+        }
+        
+        .logo:hover {
+            opacity: 0.85;
+        }
+        
+        /* Navigation Links - Desktop */
+        .nav-links {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        
+        .nav-links > a {
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-dark);
+            transition: all 0.2s;
+            padding: 0.5rem 0.875rem;
+            border-radius: 30px;
+            white-space: nowrap;
+        }
+        
+        .nav-links > a:hover {
+            color: var(--primary);
+            background: rgba(41, 104, 7, 0.1);
+        }
+        
+        /* ========== BUTTONS - GREEN & GOLD ========== */
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 1.25rem;
+            background: var(--primary);
+            color: white !important;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+            text-align: center;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(41, 104, 7, 0.25);
+        }
+        
+        .btn-outline {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 1.25rem;
+            background: rgba(255, 255, 255, 0.55);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            color: var(--text-dark) !important;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 500;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.85);
+            border-color: var(--primary);
+            color: var(--primary) !important;
+        }
+        
+        /* Avatar */
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+        
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .avatar span {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: white;
+        }
+        
+        /* Dropdown - Desktop */
+        .user-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 40px;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(12px);
+            min-width: 200px;
+            box-shadow: var(--shadow-lg);
+            border-radius: var(--radius);
+            z-index: 1;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+        
+        .user-dropdown:hover .dropdown-content {
+            display: block;
+        }
+        
+        .dropdown-content a {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.625rem 1rem;
+            color: var(--text-dark);
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: background 0.2s;
+        }
+        
+        .dropdown-content a:hover {
+            background: rgba(41, 104, 7, 0.1);
+            color: var(--primary);
+        }
+        
+        .dropdown-divider {
+            height: 1px;
+            background: rgba(0, 0, 0, 0.08);
+            margin: 0.25rem 0;
+        }
+        
+        /* Mobile Menu Button */
+        .mobile-menu-btn {
+            display: none;
+            background: rgba(255, 255, 255, 0.55);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 30px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0.4rem 0.85rem;
+            color: var(--text-dark);
+            transition: all 0.2s;
+        }
+        
+        .mobile-menu-btn:hover {
+            background: rgba(255, 255, 255, 0.85);
+            border-color: var(--primary);
+        }
+        
+        /* ========== MOBILE MENU STYLES - FIXED ========== */
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            .nav-links {
+                position: fixed;
+                top: 60px;
+                left: -100%;
+                width: 85%;
+                max-width: 320px;
+                height: calc(100vh - 60px);
+                background: rgba(255, 255, 255, 0.98);
+                backdrop-filter: blur(20px);
+                flex-direction: column;
+                align-items: stretch;
+                padding: 1.5rem;
+                gap: 0.5rem;
+                transition: left 0.3s ease;
+                z-index: 999;
+                border-right: 1px solid rgba(0, 0, 0, 0.1);
+                box-shadow: 2px 0 20px rgba(0, 0, 0, 0.15);
+                overflow-y: auto;
+            }
+            
+            .nav-links.active {
+                left: 0;
+            }
+            
+            /* Mobile nav links styling */
+            .nav-links > a {
+                display: block;
+                width: 100%;
+                text-align: left;
+                padding: 0.875rem 1rem;
+                font-size: 1rem;
+                border-radius: 12px;
+                background: transparent;
+                color: var(--text-dark);
+                font-weight: 500;
+                white-space: normal;
+            }
+            
+            .nav-links > a:hover {
+                background: rgba(41, 104, 7, 0.1);
+                color: var(--primary);
+            }
+            
+            /* Mobile buttons */
+            .nav-links .btn-outline,
+            .nav-links .btn-primary {
+                display: block;
+                width: 100%;
+                text-align: center;
+                margin-top: 0.25rem;
+                padding: 0.75rem 1rem;
+            }
+            
+            /* Mobile user dropdown */
+            .user-dropdown {
+                width: 100%;
+                margin-top: 0.25rem;
+            }
+            
+            .user-dropdown .avatar {
+                width: 100%;
+                justify-content: flex-start;
+                gap: 0.75rem;
+                background: transparent;
+                border: none;
+                padding: 0.75rem 1rem;
+                border-radius: 12px;
+                margin: 0;
+            }
+            
+            .user-dropdown .avatar span {
+                color: var(--text-dark);
+                background: none;
+                font-size: 1rem;
+                font-weight: 500;
+            }
+            
+            .user-dropdown .avatar:hover {
+                background: rgba(41, 104, 7, 0.1);
+            }
+            
+            /* Mobile dropdown content */
+            .user-dropdown .dropdown-content {
+                position: static;
+                display: none;
+                background: rgba(245, 245, 245, 0.5);
+                backdrop-filter: blur(8px);
+                box-shadow: none;
+                border: none;
+                margin-top: 0.25rem;
+                margin-left: 0.5rem;
+                width: calc(100% - 0.5rem);
+                border-radius: 12px;
+            }
+            
+            .user-dropdown.active .dropdown-content {
+                display: block;
+            }
+            
+            .dropdown-content a {
+                padding: 0.75rem 1rem;
+                font-size: 0.875rem;
+            }
+        }
+        
+        /* ========== GLASS CTA SECTION ========== */
+        .cta-section {
+            background: rgba(41, 104, 7, 0.75);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+            padding: 2.8rem 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.06'%3E%3Cpath d='M36 34v2H24v-2h12zM36 24v2H24v-2h12z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            pointer-events: none;
+        }
+        
+        .cta-container {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+        
+        .cta-title {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .cta-description {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.92);
+            max-width: 600px;
+            margin: 0 auto 1.2rem;
+            line-height: 1.5;
+        }
+        
+        .cta-buttons {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .cta-btn-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.7rem 1.8rem;
+            background: var(--gold);
+            color: #2c2c2c;
+            text-decoration: none;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        }
+        
+        .cta-btn-primary:hover {
+            background: var(--gold-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
+        }
+        
+        .cta-btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.7rem 1.8rem;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(8px);
+            color: white;
+            text-decoration: none;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            cursor: pointer;
+        }
+        
+        .cta-btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.32);
+            transform: translateY(-2px);
+        }
+        
+        /* ========== HOW IT WORKS SECTION ========== */
+        .how-it-works {
+            padding: 3rem 0;
+            background: transparent;
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 2rem;
+        }
+        
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.8rem;
+        }
+        
+        .step-card {
+            background: rgba(255, 255, 255, 0.55);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: var(--radius-lg);
+            padding: 1.6rem;
+            text-align: center;
+            transition: all 0.25s;
+        }
+        
+        .step-card:hover {
+            background: rgba(255, 255, 255, 0.75);
+            transform: translateY(-3px);
+        }
+        
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            background: var(--primary);
+            color: white;
+            font-weight: 700;
+            font-size: 1.25rem;
+            border-radius: 60px;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .step-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--primary-dark);
+        }
+        
+        .step-desc {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+        
+        /* ========== GLASS FOOTER ========== */
+        .site-footer {
+            background: rgba(30, 34, 28, 0.85);
+            backdrop-filter: blur(12px);
+            padding: 1.5rem 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            margin: 0;
+        }
+        
+        .footer-inner {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+        
+        .footer-brand-text {
+            font-size: 1rem;
+            font-weight: 700;
+            color: white;
+            letter-spacing: -0.02em;
+        }
+        
+        .footer-copyright {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.7rem;
+        }
+        
+        .footer-links-group {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+        
+        .footer-links-group a {
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            font-size: 0.7rem;
+            transition: color 0.2s;
+        }
+        
+        .footer-links-group a:hover {
+            color: var(--gold);
+        }
+        
+        /* ========== GLASS CARDS ========== */
+        .card {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.25s;
+        }
+        
+        .card:hover {
+            background: rgba(255, 255, 255, 0.78);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.6rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            border-radius: 30px;
+            background: rgba(41, 104, 7, 0.15);
+            color: var(--primary-dark);
+            backdrop-filter: blur(4px);
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .price-highlight {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .text-muted {
+            color: var(--text-muted);
+        }
+        
+        /* Mobile additional fixes */
+        @media (max-width: 480px) {
+            .cta-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .cta-btn-primary,
+            .cta-btn-secondary {
+                width: 100%;
+                text-align: center;
+            }
+            
+            .cta-title {
+                font-size: 1.6rem;
+            }
+            
+            .section-title {
+                font-size: 1.4rem;
+            }
+            
+            .steps-grid {
+                gap: 1rem;
+            }
+            
+            .footer-inner {
+                flex-direction: column;
+                text-align: center;
+                gap: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">AIAGROSYSTEM</a>
+            
+            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu">☰</button>
+            
+            <div class="nav-links" id="navLinks">
+                <a href="/#features">Features</a>
+                <a href="{% url 'marketplace' %}">Marketplace</a>
+                <a href="{% url 'market_insights' %}">AI Insights</a>
+                <a href="#how-it-works">How It Works</a>
+                {% if user.is_authenticated %}
+                    <div class="user-dropdown" id="userDropdown">
+                        <div class="avatar">
+                            {% if user.profile.profile_picture %}
+                                <img src="{{ user.profile.profile_picture.url }}" alt="{{ user.username }}">
+                            {% else %}
+                                <span>{{ user.username }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="dropdown-content">
+                            <a href="{% url 'dashboard' %}">Dashboard</a>
+                            <a href="{% url 'profile' %}">Profile</a>
+                            <div class="dropdown-divider"></div>
+                            <a href="{% url 'account_logout' %}">Sign Out</a>
+                        </div>
+                    </div>
+                {% else %}
+                    <a href="{% url 'account_login' %}" class="btn-outline">Sign In</a>
+                    <a href="{% url 'account_signup' %}" class="btn-primary">Sign Up</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        {% block content %}
+        <div class="container" style="margin-top: 2rem;">
+            <div class="card">
+                <h1>Welcome to AIAGROSYSTEM</h1>
+                <p class="text-muted" style="margin-top: 0.5rem;">AI-Powered Agricultural Marketplace — Smart trading, real-time insights</p>
+                <div style="margin-top: 1rem;">
+                    <span class="badge">AI Analytics</span>
+                    <span class="badge" style="margin-left: 0.5rem;">Smart Marketplace</span>
+                </div>
+            </div>
+            
+            <div class="grid" style="margin-top: 1rem;">
+                <div class="card">
+                    <h3>Market Intelligence</h3>
+                    <p class="text-muted">Real-time price predictions and demand forecasting powered by machine learning.</p>
+                    <div class="price-highlight">+28% ROI</div>
+                </div>
+                <div class="card">
+                    <h3>Direct Trading</h3>
+                    <p class="text-muted">Connect directly with verified buyers and sellers. Transparent pricing, secure payments.</p>
+                    <div class="badge">Verified Sellers</div>
+                </div>
+                <div class="card">
+                    <h3>Smart Advisory</h3>
+                    <p class="text-muted">Personalized crop planning, weather alerts, and sustainable farming recommendations.</p>
+                </div>
+            </div>
+        </div>
+        {% endblock %}
+    </main>
+
+    <!-- Glass CTA Section -->
+    <div class="cta-section">
+        <div class="cta-container">
+            <div class="cta-title">Grow Smarter with AI</div>
+            <div class="cta-description">Join thousands of farmers and agribusinesses using predictive analytics to maximize profit and reduce waste.</div>
+            <div class="cta-buttons">
+                <a href="{% url 'account_signup' %}" class="cta-btn-primary">Get Started</a>
+                <a href="{% url 'market_insights' %}" class="cta-btn-secondary">Explore AI Insights</a>
+            </div>
+        </div>
+    </div>
+
+    
+
+    <!-- Glass Footer -->
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <span class="footer-brand-text">AgroMarket AI</span>
+            </div>
+            <div class="footer-copyright">
+                © 2026 AI-Based Agro Market System — Maseno University ICTM Project
+            </div>
+            <div class="footer-links-group">
+                <a href="#">Privacy</a>
+                <a href="#">Terms</a>
+                <a href="#">Contact</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Mobile Menu JavaScript -->
+    <script>
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const navLinks = document.getElementById('navLinks');
+        
+        if (mobileMenuBtn) {
+            mobileMenuBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                navLinks.classList.toggle('active');
+                this.textContent = navLinks.classList.contains('active') ? '✕' : '☰';
+            });
+        }
+        
+        // Close mobile menu when clicking a link
+        const links = document.querySelectorAll('.nav-links a');
+        links.forEach(link => {
+            link.addEventListener('click', () => {
+                navLinks.classList.remove('active');
+                if (mobileMenuBtn) mobileMenuBtn.textContent = '☰';
+            });
+        });
+        
+        // Mobile dropdown toggle
+        const userDropdown = document.getElementById('userDropdown');
+        if (userDropdown) {
+            const avatar = userDropdown.querySelector('.avatar');
+            if (avatar) {
+                avatar.addEventListener('click', function(e) {
+                    if (window.innerWidth <= 768) {
+                        e.stopPropagation();
+                        userDropdown.classList.toggle('active');
+                    }
+                });
+            }
+        }
+        
+        // Close menu when clicking outside
+        document.addEventListener('click', function(event) {
+            if (window.innerWidth <= 768) {
+                if (navLinks && !navLinks.contains(event.target) && mobileMenuBtn && !mobileMenuBtn.contains(event.target)) {
+                    navLinks.classList.remove('active');
+                    if (mobileMenuBtn) mobileMenuBtn.textContent = '☰';
+                }
+                if (userDropdown && !userDropdown.contains(event.target)) {
+                    userDropdown.classList.remove('active');
+                }
+            }
+        });
+        
+        // Handle resize
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                navLinks.classList.remove('active');
+                if (mobileMenuBtn) mobileMenuBtn.textContent = '☰';
+                if (userDropdown) userDropdown.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>

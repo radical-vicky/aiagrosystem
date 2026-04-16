@@ -1,0 +1,560 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block dashboard_content %}
+<style>
+    /* Glass Morphism Dashboard Styles */
+    .dashboard-container {
+        max-width: 1280px;
+        margin: 0 auto;
+    }
+    
+    /* Glass Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 20px;
+        padding: 1.2rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        background: rgba(255, 255, 255, 0.85);
+    }
+    
+    .stat-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #57606a;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #296807, #1f5205);
+        background-clip: text;
+        -webkit-background-clip: text;
+        color: transparent;
+    }
+    
+    /* Glass Section Title */
+    .glass-section-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin: 1.5rem 0 1.2rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid rgba(245, 184, 27, 0.3);
+        color: #24292f;
+        display: inline-block;
+    }
+    
+    /* Glass Products Grid */
+    .products-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 1.2rem;
+    }
+    
+    .glass-product-card {
+        background: rgba(255, 255, 255, 0.65);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 16px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .glass-product-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        background: rgba(255, 255, 255, 0.85);
+    }
+    
+    .product-image {
+        height: 160px;
+        background: linear-gradient(135deg, rgba(41, 104, 7, 0.1), rgba(31, 82, 5, 0.05));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .product-image .no-image {
+        color: #57606a;
+        font-size: 0.75rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .product-image .no-image::before {
+        content: "🌾";
+        font-size: 2rem;
+        opacity: 0.5;
+    }
+    
+    .product-info {
+        padding: 1rem;
+    }
+    
+    .product-name {
+        font-weight: 700;
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+        color: #24292f;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .product-price {
+        font-size: 1rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #296807, #1f5205);
+        background-clip: text;
+        -webkit-background-clip: text;
+        color: transparent;
+        margin-bottom: 0.5rem;
+    }
+    
+    .order-date {
+        font-size: 0.7rem;
+        color: #57606a;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Glass Buttons */
+    .btn-glass-green {
+        display: block;
+        text-align: center;
+        background: #296807;
+        color: white;
+        text-decoration: none;
+        padding: 0.5rem;
+        border-radius: 40px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        transition: all 0.2s;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn-glass-green:hover {
+        background: #1f5205;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(41, 104, 7, 0.3);
+    }
+    
+    .btn-glass-gold {
+        display: block;
+        text-align: center;
+        background: #f5b81b;
+        color: #2c2c2c;
+        text-decoration: none;
+        padding: 0.5rem;
+        border-radius: 40px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        transition: all 0.2s;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn-glass-gold:hover {
+        background: #e0a800;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(245, 184, 27, 0.3);
+    }
+    
+    .btn-glass-outline {
+        display: block;
+        text-align: center;
+        background: rgba(255, 255, 255, 0.5);
+        backdrop-filter: blur(4px);
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        color: #24292f;
+        text-decoration: none;
+        padding: 0.5rem;
+        border-radius: 40px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+    
+    .btn-glass-outline:hover {
+        background: rgba(255, 255, 255, 0.8);
+        border-color: #296807;
+        color: #296807;
+    }
+    
+    /* Badges */
+    .badge-glass-warning {
+        background: rgba(245, 184, 27, 0.15);
+        backdrop-filter: blur(4px);
+        color: #e0a800;
+        padding: 0.25rem 0.6rem;
+        border-radius: 30px;
+        font-size: 0.65rem;
+        font-weight: 600;
+        display: inline-block;
+        margin-bottom: 0.5rem;
+    }
+    
+    .badge-glass-success {
+        background: rgba(41, 104, 7, 0.12);
+        backdrop-filter: blur(4px);
+        color: #296807;
+        padding: 0.25rem 0.6rem;
+        border-radius: 30px;
+        font-size: 0.65rem;
+        font-weight: 600;
+        display: inline-block;
+        margin-bottom: 0.5rem;
+    }
+    
+    .badge-glass-danger {
+        background: rgba(220, 53, 69, 0.12);
+        backdrop-filter: blur(4px);
+        color: #dc3545;
+        padding: 0.25rem 0.6rem;
+        border-radius: 30px;
+        font-size: 0.65rem;
+        font-weight: 600;
+        display: inline-block;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Empty State */
+    .glass-empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        background: rgba(255, 255, 255, 0.5);
+        backdrop-filter: blur(8px);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: #57606a;
+        grid-column: 1 / -1;
+    }
+    
+    .glass-empty-state .empty-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+    
+    .glass-empty-state .empty-title {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #24292f;
+    }
+    
+    .glass-empty-state .empty-message {
+        font-size: 0.85rem;
+        margin-bottom: 1.2rem;
+    }
+    
+    /* Role Buttons */
+    .role-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 1rem;
+    }
+    
+    /* Main Card */
+    .glass-dashboard-card {
+        background: rgba(255, 255, 255, 0.55);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 24px;
+        padding: 1.8rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    }
+    
+    .glass-dashboard-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #296807, #1f5205);
+        background-clip: text;
+        -webkit-background-clip: text;
+        color: transparent;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid rgba(245, 184, 27, 0.3);
+        display: inline-block;
+    }
+    
+    /* Welcome Section */
+    .welcome-section {
+        background: linear-gradient(135deg, rgba(41, 104, 7, 0.1), rgba(245, 184, 27, 0.05));
+        border-radius: 20px;
+        padding: 1.2rem 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid rgba(245, 184, 27, 0.2);
+    }
+    
+    .welcome-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #24292f;
+    }
+    
+    .welcome-title span {
+        background: linear-gradient(135deg, #296807, #f5b81b);
+        background-clip: text;
+        -webkit-background-clip: text;
+        color: transparent;
+    }
+    
+    .welcome-subtitle {
+        font-size: 0.85rem;
+        color: #57606a;
+        margin-top: 0.3rem;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .glass-dashboard-card {
+            padding: 1.2rem;
+        }
+        
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.8rem;
+        }
+        
+        .products-grid {
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 0.8rem;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+        }
+        
+        .product-image {
+            height: 120px;
+        }
+        
+        .glass-dashboard-title {
+            font-size: 1.1rem;
+        }
+        
+        .role-buttons {
+            flex-direction: column;
+        }
+        
+        .role-buttons a {
+            width: 100%;
+            text-align: center;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .products-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .glass-dashboard-card {
+            padding: 1rem;
+        }
+    }
+    
+    /* Animation */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .glass-dashboard-card {
+        animation: fadeInUp 0.4s ease;
+    }
+    
+    .stat-card {
+        animation: fadeInUp 0.4s ease;
+        animation-fill-mode: both;
+    }
+    
+    .stat-card:nth-child(1) { animation-delay: 0.05s; }
+    .stat-card:nth-child(2) { animation-delay: 0.1s; }
+    .stat-card:nth-child(3) { animation-delay: 0.15s; }
+    
+    .glass-product-card {
+        animation: fadeInUp 0.4s ease;
+        animation-fill-mode: both;
+    }
+</style>
+
+<div class="dashboard-container">
+    <div class="glass-dashboard-card">
+        <!-- Welcome Section -->
+        <div class="welcome-section">
+            <div class="welcome-title">
+                Welcome back, <span>{{ user.get_full_name|default:user.username }}</span>!
+            </div>
+            <div class="welcome-subtitle">
+                {% if user.profile.role == 'farmer' %}
+                    Manage your products and track orders from buyers.
+                {% elif user.profile.role == 'buyer' %}
+                    Discover fresh produce and track your orders.
+                {% else %}
+                    Complete your registration to start using the platform.
+                {% endif %}
+            </div>
+        </div>
+        
+        {% if user.profile.role == 'farmer' %}
+            <!-- Farmer Stats -->
+            <div class="glass-dashboard-title">Overview</div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Products</div>
+                    <div class="stat-value">{{ total_products|default:0 }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Orders Received</div>
+                    <div class="stat-value">{{ total_orders|default:0 }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Pending Orders</div>
+                    <div class="stat-value">{{ pending_orders|default:0 }}</div>
+                </div>
+            </div>
+            
+            <!-- Recent Products -->
+            <div class="glass-dashboard-title">Your Recent Products</div>
+            <div class="products-grid">
+                {% for product in produce_list|slice:":6" %}
+                <div class="glass-product-card">
+                    <div class="product-image">
+                        {% if product.image %}
+                            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                        {% else %}
+                            <div class="no-image"></div>
+                        {% endif %}
+                    </div>
+                    <div class="product-info">
+                        <div class="product-name" title="{{ product.name }}">{{ product.name|truncatechars:25 }}</div>
+                        <div class="product-price">KES {{ product.price|floatformat:0 }}</div>
+                        <a href="{% url 'edit_produce' product.id %}" class="btn-glass-gold">Edit Product</a>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="glass-empty-state">
+                    <div class="empty-icon">🌾</div>
+                    <div class="empty-title">No products yet</div>
+                    <div class="empty-message">Start selling by adding your first product.</div>
+                    <a href="{% url 'add_produce' %}" class="btn-glass-green" style="display: inline-block; padding: 0.6rem 1.5rem;">Add Your First Product</a>
+                </div>
+                {% endfor %}
+            </div>
+            
+        {% elif user.profile.role == 'buyer' %}
+            <!-- Buyer Stats -->
+            <div class="glass-dashboard-title">Your Activity</div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Orders</div>
+                    <div class="stat-value">{{ total_orders|default:0 }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Spent</div>
+                    <div class="stat-value">KES {{ total_spent|default:0|floatformat:0 }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Pending Orders</div>
+                    <div class="stat-value">{{ pending_orders|default:0 }}</div>
+                </div>
+            </div>
+            
+            <!-- Recent Orders -->
+            <div class="glass-dashboard-title">Recent Orders</div>
+            <div class="products-grid">
+                {% for order in orders|slice:":6" %}
+                <div class="glass-product-card">
+                    <div class="product-image">
+                        {% if order.produce.image %}
+                            <img src="{{ order.produce.image.url }}" alt="{{ order.produce.name }}">
+                        {% else %}
+                            <div class="no-image"></div>
+                        {% endif %}
+                    </div>
+                    <div class="product-info">
+                        <div class="product-name" title="{{ order.produce.name }}">{{ order.produce.name|truncatechars:25 }}</div>
+                        <div class="product-price">KES {{ order.total_price|floatformat:0 }}</div>
+                        <div class="order-date">{{ order.order_date|date:"M d, Y" }}</div>
+                        {% if order.status == 'pending' %}
+                            <div class="badge-glass-warning">Pending</div>
+                        {% elif order.status == 'delivered' %}
+                            <div class="badge-glass-success">Delivered</div>
+                        {% elif order.status == 'cancelled' %}
+                            <div class="badge-glass-danger">Cancelled</div>
+                        {% elif order.status == 'shipped' %}
+                            <div class="badge-glass-warning">Shipped</div>
+                        {% endif %}
+                        <a href="{% url 'order_detail' order.id %}" class="btn-glass-green">View Order</a>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="glass-empty-state">
+                    <div class="empty-icon">🛒</div>
+                    <div class="empty-title">No orders yet</div>
+                    <div class="empty-message">Start shopping to see your orders here.</div>
+                    <a href="{% url 'marketplace' %}" class="btn-glass-green" style="display: inline-block; padding: 0.6rem 1.5rem;">Start Shopping</a>
+                </div>
+                {% endfor %}
+            </div>
+            
+        {% else %}
+            <!-- No Role Selected -->
+            <div class="glass-empty-state">
+                <div class="empty-icon">👋</div>
+                <div class="empty-title">Complete Your Registration</div>
+                <div class="empty-message">Please select your role to start using the platform.</div>
+                <div class="role-buttons">
+                    <a href="{% url 'become_farmer' %}" class="btn-glass-green" style="padding: 0.7rem 1.8rem;">Register as Farmer</a>
+                    <a href="{% url 'become_buyer' %}" class="btn-glass-outline" style="padding: 0.7rem 1.8rem;">Register as Buyer</a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
