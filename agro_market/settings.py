@@ -21,18 +21,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY')
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-# Allow all Render domains and local development
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') if os.environ.get('ALLOWED_HOSTS') else []
-if not ALLOWED_HOSTS or ALLOWED_HOSTS == ['']:
-    # Default for development
-    ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,.onrender.com,aiagrosystem.onrender.com').split(',')
 
-# Add Render domain in production
-if not DEBUG:
-    ALLOWED_HOSTS.extend([
-        'aiagrosystem.onrender.com',
-        '.onrender.com',  # This allows all subdomains on render
-    ])
+
 
 # OpenAI Configuration
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
