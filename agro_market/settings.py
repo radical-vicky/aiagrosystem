@@ -17,13 +17,11 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Security
-# Security
 SECRET_KEY = os.environ.get('SECRET_KEY')
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,.onrender.com,aiagrosystem.onrender.com').split(',')
-
-
+# FIXED: Changed from config() to os.environ.get()
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,.onrender.com,aiagrosystem.onrender.com').split(',')
 
 # OpenAI Configuration
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
@@ -184,20 +182,22 @@ SOCIALACCOUNT_UNIQUE_EMAIL = True
 # Email
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-# CSRF
+# FIXED: Added Render domain to CSRF trusted origins
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8000',
     'http://127.0.0.1:8000',
+    'https://aiagrosystem.onrender.com',
 ]
 
 # Crispy Forms
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
-# CORS
+# FIXED: Added Render domain to CORS allowed origins
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
     "http://127.0.0.1:8000",
+    "https://aiagrosystem.onrender.com",
 ]
 
 # REST Framework
@@ -209,9 +209,6 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.AllowAny',
     ],
 }
-
-
-# Add to agro_market/settings.py (at the bottom)
 
 # Groq API Configuration (Free alternative to OpenAI)
 GROQ_API_KEY = os.environ.get('GROQ_API_KEY', '')
