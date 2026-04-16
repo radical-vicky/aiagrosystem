@@ -69,19 +69,34 @@ def predict_price_api(request):
             }
         
         if result.get('success'):
-            # Save to database
+            # Save to database - FIXED VERSION
             try:
-                PricePrediction.objects.create(
-                    produce=product,
-                    predicted_price=result.get('predicted_price', 0),
-                    current_price=product.price if product else result.get('predicted_price', 0),
-                    confidence_score=result.get('confidence', 75),
-                    demand_level=result.get('demand_level', 'medium'),
-                    factors_considered=result.get('analysis', '')[:500],
-                    is_active=True
-                )
+                # Create prediction dictionary with only required fields
+                prediction_data = {
+                    'predicted_price': result.get('predicted_price', 0),
+                    'confidence_score': result.get('confidence', 75),
+                    'demand_level': result.get('demand_level', 'medium'),
+                    'factors_considered': result.get('analysis', '')[:500],
+                    'is_active': True
+                }
+                
+                # Only add produce if product exists
+                if product:
+                    prediction_data['produce'] = product
+                    prediction_data['current_price'] = product.price
+                else:
+                    # Use predicted price as current price if no product
+                    prediction_data['current_price'] = result.get('predicted_price', 0)
+                
+                prediction = PricePrediction.objects.create(**prediction_data)
+                print(f"Saved prediction {prediction.id} for crop: {crop_type}")
+                
             except Exception as e:
                 print(f"Error saving prediction: {e}")
+                import traceback
+                traceback.print_exc()
+                # Don't fail the response if just saving fails
+                pass
             
             return JsonResponse({
                 'success': True,
