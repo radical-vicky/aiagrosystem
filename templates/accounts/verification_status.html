@@ -1,0 +1,313 @@
+{% extends 'dashboard_base.html' %}
+
+{% block page_title %}Verification Status{% endblock %}
+
+{% block dashboard_content %}
+<div class="verification-container">
+    <div class="verification-card">
+        <div class="verification-header">
+            <h2>Verification Status</h2>
+            <p class="header-description">Complete these steps to verify your account</p>
+        </div>
+
+        <div class="verification-items">
+            <!-- Email Verification -->
+            <div class="verification-item">
+                <div class="item-info">
+                    <div class="item-title">Email Address</div>
+                    <div class="item-detail">{{ user.email }}</div>
+                </div>
+                <div class="item-status">
+                    {% if verification_levels.email %}
+                        <span class="status-badge status-success">Verified</span>
+                    {% else %}
+                        <span class="status-badge status-pending">Pending</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Phone Verification -->
+            <div class="verification-item">
+                <div class="item-info">
+                    <div class="item-title">Phone Number</div>
+                    <div class="item-detail">
+                        {% if phone_verification %}
+                            {{ phone_verification.phone_number }}
+                        {% else %}
+                            <span class="text-muted">Not provided</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="item-status">
+                    {% if verification_levels.phone %}
+                        <span class="status-badge status-success">Verified</span>
+                        <span class="status-action disabled">Completed</span>
+                    {% else %}
+                        <span class="status-badge status-pending">Pending</span>
+                        <a href="{% url 'accounts:verify_phone' %}" class="status-action action-link">Verify</a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- ID Verification -->
+            <div class="verification-item">
+                <div class="item-info">
+                    <div class="item-title">Government ID</div>
+                    <div class="item-detail">
+                        {% if id_verification %}
+                            {{ id_verification.get_id_type_display }}
+                            <span class="text-muted">({{ id_verification.get_status_display }})</span>
+                        {% else %}
+                            <span class="text-muted">Not uploaded</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="item-status">
+                    {% if verification_levels.id %}
+                        <span class="status-badge status-success">Verified</span>
+                        <span class="status-action disabled">Completed</span>
+                    {% else %}
+                        <span class="status-badge status-pending">Pending</span>
+                        <a href="{% url 'accounts:upload_government_id' %}" class="status-action action-link">Upload ID</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Next Steps -->
+        <div class="verification-footer">
+            {% if verification_levels.phone and verification_levels.id %}
+                <div class="alert alert-success">
+                    <strong>All set!</strong> You are fully verified. You can now become a farmer and start selling your produce.
+                    <div class="footer-action">
+                        <a href="{% url 'accounts:become_farmer' %}" class="btn btn-primary">Become a Farmer</a>
+                    </div>
+                </div>
+            {% elif verification_levels.phone %}
+                <div class="alert alert-info">
+                    <strong>Phone verified.</strong> Next step: Upload your government ID to become a verified farmer.
+                    <div class="footer-action">
+                        <a href="{% url 'accounts:upload_government_id' %}" class="btn btn-outline">Upload ID</a>
+                    </div>
+                </div>
+            {% else %}
+                <div class="alert alert-warning">
+                    <strong>Verification required.</strong> Please verify your phone number to continue.
+                    <div class="footer-action">
+                        <a href="{% url 'accounts:verify_phone' %}" class="btn btn-outline">Verify Phone</a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="back-link">
+            <a href="{% url 'accounts:dashboard' %}">← Back to Dashboard</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Verification Status Styles - GitHub UI */
+    .verification-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    .verification-card {
+        background: #ffffff;
+        border: 1px solid #d0d7de;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+
+    .verification-header {
+        padding: 1.5rem 1.5rem 0.5rem;
+        border-bottom: 1px solid #eaeef2;
+    }
+
+    .verification-header h2 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #24292f;
+        margin-bottom: 0.25rem;
+    }
+
+    .header-description {
+        font-size: 0.75rem;
+        color: #57606a;
+        margin-bottom: 1rem;
+    }
+
+    .verification-items {
+        padding: 0;
+    }
+
+    .verification-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #eaeef2;
+    }
+
+    .verification-item:last-child {
+        border-bottom: none;
+    }
+
+    .item-info {
+        flex: 1;
+    }
+
+    .item-title {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #24292f;
+        margin-bottom: 0.25rem;
+    }
+
+    .item-detail {
+        font-size: 0.8125rem;
+        color: #57606a;
+        font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', monospace;
+    }
+
+    .item-status {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-shrink: 0;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        border-radius: 2em;
+        line-height: 1;
+    }
+
+    .status-success {
+        background: #dafbe1;
+        color: #1a7f37;
+        border: 1px solid #ace5b8;
+    }
+
+    .status-pending {
+        background: #fff8c5;
+        color: #9a6700;
+        border: 1px solid #f7e39b;
+    }
+
+    .status-action {
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .action-link {
+        color: #0969da;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .action-link:hover {
+        text-decoration: underline;
+    }
+
+    .status-action.disabled {
+        color: #8c959f;
+    }
+
+    .text-muted {
+        color: #6e7781;
+    }
+
+    .verification-footer {
+        padding: 1rem 1.5rem;
+        background: #f6f8fa;
+        border-top: 1px solid #d0d7de;
+    }
+
+    .alert {
+        padding: 1rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        margin-bottom: 0;
+    }
+
+    .alert-success {
+        background: #dafbe1;
+        border: 1px solid #ace5b8;
+        color: #1a7f37;
+    }
+
+    .alert-info {
+        background: #ddf4ff;
+        border: 1px solid #b6e3ff;
+        color: #0969da;
+    }
+
+    .alert-warning {
+        background: #fff8c5;
+        border: 1px solid #f7e39b;
+        color: #9a6700;
+    }
+
+    .alert strong {
+        font-weight: 600;
+    }
+
+    .footer-action {
+        margin-top: 0.75rem;
+    }
+
+    .btn {
+        display: inline-block;
+        padding: 0.4rem 0.8rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-decoration: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-primary {
+        background: #2da44e;
+        color: white;
+        border: 1px solid #2c974b;
+    }
+
+    .btn-primary:hover {
+        background: #2c974b;
+    }
+
+    .btn-outline {
+        background: transparent;
+        color: #0969da;
+        border: 1px solid #d0d7de;
+    }
+
+    .btn-outline:hover {
+        background: #f3f4f6;
+        border-color: #0969da;
+    }
+
+    .back-link {
+        padding: 1rem 1.5rem 1.5rem;
+        text-align: center;
+    }
+
+    .back-link a {
+        color: #57606a;
+        text-decoration: none;
+        font-size: 0.75rem;
+    }
+
+    .back-link a:hover {
+        color: #0969da;
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}

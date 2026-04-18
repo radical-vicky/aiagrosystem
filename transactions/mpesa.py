@@ -1,8 +1,11 @@
+# transactions/mpesa.py
+
 import requests
 import json
 from datetime import datetime
 from django.conf import settings
 import base64
+
 
 class MpesaAPI:
     def __init__(self):
@@ -31,7 +34,7 @@ class MpesaAPI:
         }
         
         try:
-            response = requests.get(auth_url, headers=headers)
+            response = requests.get(auth_url, headers=headers, timeout=30)
             response.raise_for_status()
             return response.json().get('access_token')
         except requests.exceptions.RequestException as e:
@@ -53,6 +56,14 @@ class MpesaAPI:
             'Content-Type': 'application/json'
         }
         
+        # Format phone number (remove leading 0 or +)
+        if phone_number.startswith('0'):
+            phone_number = '254' + phone_number[1:]
+        elif phone_number.startswith('+'):
+            phone_number = phone_number[1:]
+        elif not phone_number.startswith('254'):
+            phone_number = '254' + phone_number
+        
         payload = {
             'BusinessShortCode': self.shortcode,
             'Password': password,
@@ -63,18 +74,52 @@ class MpesaAPI:
             'PartyB': self.shortcode,
             'PhoneNumber': phone_number,
             'CallBackURL': self.callback_url,
-            'AccountReference': account_reference,
-            'TransactionDesc': transaction_desc
+            'AccountReference': account_reference[:12],
+            'TransactionDesc': transaction_desc[:13]
         }
         
         stk_url = f"{self.base_url}/mpesa/stkpush/v1/processrequest"
         
         try:
-            response = requests.post(stk_url, headers=headers, json=payload)
+            response = requests.post(stk_url, headers=headers, json=payload, timeout=30)
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
             print(f"Error initiating STK push: {e}")
             return None
+    
+    def check_payment_status(self, checkout_request_id):
+        """Check payment status"""
+        access_token = self.get_access_token()
+        if not access_token:
+            return None
+        
+        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+        password_str = f"{self.shortcode}{self.passkey}{timestamp}"
+        password = base64.b64encode(password_str.encode()).decode('ascii')
+        
+        headers = {
+            'Authorization': f'Bearer {access_token}',
+            'Content-Type': 'application/json'
+        }
+        
+        payload = {
+            'BusinessShortCode': self.shortcode,
+            'Password': password,
+            'Timestamp': timestamp,
+            'CheckoutRequestID': checkout_request_id
+        }
+        
+        query_url = f"{self.base_url}/mpesa/stkpushquery/v1/query"
+        
+        try:
+            response = requests.post(query_url, headers=headers, json=payload, timeout=30)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            print(f"Error checking payment status: {e}")
+            return None
 
+
+# Create a single instance to use throughout the app
 mpesa_api = MpesaAPI()

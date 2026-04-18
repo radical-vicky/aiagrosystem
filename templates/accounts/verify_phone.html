@@ -1,0 +1,241 @@
+{% extends 'dashboard_base.html' %}
+
+{% block page_title %}Verify Phone{% endblock %}
+
+{% block dashboard_content %}
+<div class="verify-container">
+    <div class="verify-card">
+        <div class="verify-header">
+            <h2>Verify Phone Number</h2>
+            <p class="header-description">Add your phone number to secure your account</p>
+        </div>
+
+        <div class="verify-body">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="POST" id="phoneVerificationForm">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label for="id_phone_number" class="form-label">
+                        Phone Number
+                    </label>
+                    <input type="tel" 
+                           name="phone_number" 
+                           id="id_phone_number" 
+                           class="form-control"
+                           placeholder="+1234567890"
+                           value="{{ form.phone_number.value|default:'' }}"
+                           autocomplete="off"
+                           autofocus>
+                    {% if form.phone_number.errors %}
+                        <div class="invalid-feedback">
+                            {{ form.phone_number.errors.0 }}
+                        </div>
+                    {% endif %}
+                    <div class="form-text">
+                        Enter your phone number with country code (e.g., +1 for US, +234 for Nigeria, +44 for UK)
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Send Verification Code</button>
+                    <a href="{% url 'accounts:dashboard' %}" class="btn btn-outline">Cancel</a>
+                </div>
+            </form>
+
+            <div class="info-box">
+                <strong>Why verify your phone?</strong>
+                <ul>
+                    <li>Secure your account from unauthorized access</li>
+                    <li>Receive order notifications and updates</li>
+                    <li>Build trust with buyers and sellers</li>
+                    <li>Required for farmer verification</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .verify-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    .verify-card {
+        background: #ffffff;
+        border: 1px solid #d0d7de;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+
+    .verify-header {
+        padding: 1.5rem 1.5rem 0.5rem;
+        border-bottom: 1px solid #eaeef2;
+    }
+
+    .verify-header h2 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #24292f;
+        margin-bottom: 0.25rem;
+    }
+
+    .header-description {
+        font-size: 0.75rem;
+        color: #57606a;
+        margin-bottom: 1rem;
+    }
+
+    .verify-body {
+        padding: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #24292f;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+        font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', monospace;
+        color: #24292f;
+        background-color: #ffffff;
+        border: 1px solid #d0d7de;
+        border-radius: 6px;
+        transition: all 0.2s;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #0969da;
+        box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.3);
+    }
+
+    .invalid-feedback {
+        color: #cf222e;
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+    }
+
+    .form-text {
+        font-size: 0.7rem;
+        color: #57606a;
+        margin-top: 0.25rem;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+    }
+
+    .btn {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-decoration: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid transparent;
+    }
+
+    .btn-primary {
+        background: #2da44e;
+        color: white;
+        border-color: #2c974b;
+    }
+
+    .btn-primary:hover {
+        background: #2c974b;
+    }
+
+    .btn-outline {
+        background: transparent;
+        color: #0969da;
+        border-color: #d0d7de;
+    }
+
+    .btn-outline:hover {
+        background: #f3f4f6;
+        border-color: #0969da;
+    }
+
+    .info-box {
+        margin-top: 1.5rem;
+        padding: 1rem;
+        background: #f6f8fa;
+        border: 1px solid #d0d7de;
+        border-radius: 6px;
+        font-size: 0.75rem;
+    }
+
+    .info-box strong {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #24292f;
+        font-weight: 600;
+    }
+
+    .info-box ul {
+        margin: 0;
+        padding-left: 1.25rem;
+        color: #57606a;
+    }
+
+    .info-box li {
+        margin-bottom: 0.25rem;
+    }
+
+    .alert {
+        padding: 0.75rem 1rem;
+        margin-bottom: 1rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        border: 1px solid transparent;
+    }
+
+    .alert-success {
+        background: #dafbe1;
+        border-color: #ace5b8;
+        color: #1a7f37;
+    }
+
+    .alert-error {
+        background: #ffebe9;
+        border-color: #ffc1ba;
+        color: #cf222e;
+    }
+
+    .alert-warning {
+        background: #fff8c5;
+        border-color: #f7e39b;
+        color: #9a6700;
+    }
+
+    .alert-info {
+        background: #ddf4ff;
+        border-color: #b6e3ff;
+        color: #0969da;
+    }
+</style>
+{% endblock %}

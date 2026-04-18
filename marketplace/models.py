@@ -79,6 +79,13 @@ class Order(models.Model):
         ('cancelled', 'Cancelled'),
     ]
     
+    PAYMENT_STATUS_CHOICES = [
+        ('pending', 'Pending Payment'),
+        ('paid', 'Paid'),
+        ('failed', 'Payment Failed'),
+        ('refunded', 'Refunded'),
+    ]
+    
     order_number = models.CharField(max_length=20, unique=True, blank=True)
     buyer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
     produce = models.ForeignKey(Produce, on_delete=models.CASCADE, related_name='orders')
@@ -88,6 +95,16 @@ class Order(models.Model):
     order_date = models.DateTimeField(auto_now_add=True)
     delivery_address = models.TextField()
     notes = models.TextField(blank=True)
+    
+    # New fields for payment and tracking
+    payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')
+    payment_method = models.CharField(max_length=50, blank=True, null=True)
+    payment_reference = models.CharField(max_length=100, blank=True, null=True)
+    mpesa_receipt = models.CharField(max_length=50, blank=True, null=True)
+    estimated_delivery_date = models.DateField(null=True, blank=True)
+    actual_delivery_date = models.DateField(null=True, blank=True)
+    tracking_number = models.CharField(max_length=50, blank=True, null=True)
+    courier_name = models.CharField(max_length=100, blank=True, null=True)
     
     def save(self, *args, **kwargs):
         from decimal import Decimal

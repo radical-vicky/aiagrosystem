@@ -1,0 +1,101 @@
+{% extends 'dashboard_base.html' %}
+
+{% block page_title %}Delete Product{% endblock %}
+
+{% block dashboard_content %}
+<div class="delete-container">
+    <div class="delete-card">
+        <div class="delete-header">
+            <h2>Delete Product</h2>
+        </div>
+        <div class="delete-body">
+            <p>Are you sure you want to delete <strong>{{ produce.name }}</strong>?</p>
+            <p class="warning-text">This action cannot be undone. The product will be removed from the marketplace.</p>
+            
+            <form method="POST">
+                {% csrf_token %}
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-danger">Yes, Delete</button>
+                    <a href="{% url 'accounts:my_listings' %}" class="btn btn-outline">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .delete-container {
+        max-width: 500px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .delete-card {
+        background: #ffffff;
+        border: 1px solid #d0d7de;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+    
+    .delete-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid #eaeef2;
+        background: #f6f8fa;
+    }
+    
+    .delete-header h2 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #24292f;
+    }
+    
+    .delete-body {
+        padding: 1.5rem;
+    }
+    
+    .warning-text {
+        color: #cf222e;
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+    }
+    
+    .btn {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-decoration: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid transparent;
+    }
+    
+    .btn-danger {
+        background: #cf222e;
+        color: white;
+        border-color: #cf222e;
+    }
+    
+    .btn-danger:hover {
+        background: #a51d26;
+    }
+    
+    .btn-outline {
+        background: transparent;
+        color: #0969da;
+        border-color: #d0d7de;
+    }
+    
+    .btn-outline:hover {
+        background: #f3f4f6;
+        border-color: #0969da;
+    }
+</style>
+{% endblock %}

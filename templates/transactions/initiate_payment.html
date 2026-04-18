@@ -1,66 +1,64 @@
 {% extends 'dashboard_base.html' %}
 
-{% block page_title %}Payment Details{% endblock %}
+{% block page_title %}Make Payment{% endblock %}
 
 {% block dashboard_content %}
-<div class="container">
-    <div class="glass-card">
-        <div class="glass-card-header">
-            <h4 class="mb-0">Payment Details</h4>
+<div class="payment-container">
+    <div class="payment-card">
+        <div class="payment-header">
+            <h2>Complete Payment</h2>
+            <p class="header-description">Pay for your order using M-Pesa</p>
         </div>
-        <div class="glass-card-body">
-            <!-- Order Information -->
-            <div class="order-info">
-                <h5 class="order-number">{{ order.order_number }}</h5>
-                <div class="order-amount">
-                    <span class="amount-label">Total Amount:</span>
-                    <span class="amount-value">KES {{ order.total_price }}</span>
+
+        <div class="payment-body">
+            <div class="order-summary">
+                <h3>Order Summary</h3>
+                <div class="summary-item">
+                    <span class="summary-label">Order Number:</span>
+                    <span class="summary-value">{{ order.order_number }}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Product:</span>
+                    <span class="summary-value">{{ order.produce.name }}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Quantity:</span>
+                    <span class="summary-value">{{ order.quantity }} {{ order.produce.unit }}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Total Amount:</span>
+                    <span class="summary-value highlight">KES {{ order.total_price|floatformat:0 }}</span>
                 </div>
             </div>
-            
-            <hr class="glass-divider">
-            
-            <form method="post">
+
+            <form method="POST">
                 {% csrf_token %}
                 
-                <!-- Payment Method Selection -->
-                <div class="form-group-modern">
-                    <label class="form-label-modern">Payment Method</label>
-                    <div class="payment-methods">
-                        <div class="payment-option" data-method="cash">
-                            <div class="payment-icon cash-icon">C</div>
-                            <div class="payment-info">
-                                <div class="payment-name">Cash on Delivery</div>
-                                <div class="payment-desc">Pay when you receive</div>
-                            </div>
-                            <div class="payment-radio">
-                                <input type="radio" name="payment_method" value="cash" checked>
-                            </div>
-                        </div>
-                        <div class="payment-option" data-method="mpesa">
-                            <div class="payment-icon mpesa-icon">M</div>
-                            <div class="payment-info">
-                                <div class="payment-name">M-Pesa</div>
-                                <div class="payment-desc">Mobile money payment</div>
-                            </div>
-                            <div class="payment-radio">
-                                <input type="radio" name="payment_method" value="mpesa">
-                            </div>
-                        </div>
-                    </div>
+                <div class="form-group">
+                    <label class="form-label">M-Pesa Phone Number</label>
+                    <input type="tel" 
+                           name="phone_number" 
+                           class="form-control" 
+                           placeholder="0712345678 or 254712345678"
+                           required
+                           autofocus>
+                    <div class="form-text">Enter the phone number registered with M-Pesa</div>
                 </div>
-                
-                <!-- M-Pesa Phone Field -->
-                <div class="form-group-modern" id="mpesa-field" style="display: none;">
-                    <label class="form-label-modern">M-Pesa Phone Number</label>
-                    <input type="tel" name="phone_number" class="form-control-modern" placeholder="0712345678">
-                    <small class="input-hint">You will receive a payment prompt on this number</small>
+
+                <div class="info-box">
+                    <strong>How to pay:</strong>
+                    <ol>
+                        <li>Enter your M-Pesa phone number</li>
+                        <li>Click "Pay Now"</li>
+                        <li>Check your phone for the STK Push prompt</li>
+                        <li>Enter your M-Pesa PIN to complete payment</li>
+                        <li>You will be redirected once payment is confirmed</li>
+                    </ol>
                 </div>
-                
-                <!-- Action Buttons - Green & Gold -->
-                <div class="button-group">
-                    <button type="submit" class="btn-green">Confirm Payment</button>
-                    <a href="/marketplace/produce/{{ order.produce.id }}/" class="btn-gold">Cancel</a>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Pay Now</button>
+                    <a href="/marketplace/order/{{ order.id }}/" class="btn btn-outline">Cancel</a>
                 </div>
             </form>
         </div>
@@ -68,334 +66,199 @@
 </div>
 
 <style>
-    /* Container styling for dashboard */
-    .container {
-        max-width: 700px;
+    .payment-container {
+        max-width: 600px;
         margin: 0 auto;
+        padding: 1rem;
     }
-    
-    /* Glass Morphism Card */
-    .glass-card {
-        background: rgba(255, 255, 255, 0.85);
-        backdrop-filter: blur(12px);
-        border-radius: 20px;
+
+    .payment-card {
+        background: #ffffff;
+        border: 1px solid #d0d7de;
+        border-radius: 6px;
         overflow: hidden;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.4);
-        margin-bottom: 2rem;
     }
-    
-    .glass-card-header {
-        background: linear-gradient(135deg, #296807, #1f5205);
-        padding: 1.2rem 1.5rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+
+    .payment-header {
+        padding: 1.5rem 1.5rem 0.5rem;
+        border-bottom: 1px solid #eaeef2;
     }
-    
-    .glass-card-header h4 {
-        color: white;
+
+    .payment-header h2 {
+        font-size: 1.25rem;
         font-weight: 600;
-        margin: 0;
-        letter-spacing: -0.3px;
+        color: #24292f;
+        margin-bottom: 0.25rem;
     }
-    
-    .glass-card-body {
-        padding: 1.8rem;
-    }
-    
-    /* Order Info Section */
-    .order-info {
-        background: rgba(41, 104, 7, 0.08);
-        border-radius: 16px;
-        padding: 1rem 1.2rem;
-        margin-bottom: 1.2rem;
-        border: 1px solid rgba(41, 104, 7, 0.15);
-    }
-    
-    .order-number {
-        font-size: 0.9rem;
-        color: #1f5205;
-        margin-bottom: 0.5rem;
-        font-weight: 600;
-    }
-    
-    .order-amount {
-        display: flex;
-        justify-content: space-between;
-        align-items: baseline;
-        flex-wrap: wrap;
-    }
-    
-    .amount-label {
+
+    .header-description {
+        font-size: 0.875rem;
         color: #57606a;
-        font-size: 0.9rem;
+        margin-bottom: 1rem;
     }
-    
-    .amount-value {
-        font-size: 1.5rem;
-        font-weight: 800;
-        color: #296807;
+
+    .payment-body {
+        padding: 1.5rem;
     }
-    
-    .glass-divider {
-        margin: 1.2rem 0;
-        border: none;
-        height: 1px;
-        background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.1), transparent);
-    }
-    
-    /* Form Elements */
-    .form-group-modern {
+
+    .order-summary {
+        background: #f6f8fa;
+        border: 1px solid #eaeef2;
+        border-radius: 6px;
+        padding: 1rem;
         margin-bottom: 1.5rem;
     }
-    
-    .form-label-modern {
-        display: block;
+
+    .order-summary h3 {
+        font-size: 0.875rem;
         font-weight: 600;
-        margin-bottom: 0.6rem;
         color: #24292f;
-        font-size: 0.9rem;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #eaeef2;
     }
-    
-    .form-control-modern {
-        width: 100%;
-        padding: 0.75rem 1rem;
-        background: rgba(255, 255, 255, 0.8);
-        backdrop-filter: blur(4px);
-        border: 1px solid rgba(0, 0, 0, 0.12);
-        border-radius: 12px;
-        font-size: 0.95rem;
-        transition: all 0.2s;
-        font-family: inherit;
+
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #eaeef2;
     }
-    
-    .form-control-modern:focus {
-        outline: none;
-        border-color: #296807;
-        box-shadow: 0 0 0 3px rgba(41, 104, 7, 0.15);
-        background: rgba(255, 255, 255, 0.95);
+
+    .summary-item:last-child {
+        border-bottom: none;
     }
-    
-    .input-hint {
-        display: block;
-        font-size: 0.7rem;
+
+    .summary-label {
+        font-size: 0.875rem;
         color: #57606a;
-        margin-top: 0.3rem;
     }
-    
-    /* Payment Methods */
-    .payment-methods {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
+
+    .summary-value {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #24292f;
     }
-    
-    .payment-option {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        padding: 0.9rem 1rem;
-        background: rgba(255, 255, 255, 0.5);
-        border: 1.5px solid rgba(0, 0, 0, 0.08);
-        border-radius: 14px;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-    
-    .payment-option:hover {
-        background: rgba(255, 255, 255, 0.8);
-        border-color: rgba(41, 104, 7, 0.3);
-    }
-    
-    .payment-option:has(input:checked) {
-        border-color: #296807;
-        background: rgba(41, 104, 7, 0.08);
-    }
-    
-    .payment-icon {
-        width: 44px;
-        height: 44px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+
+    .summary-value.highlight {
+        color: #1a7f37;
         font-weight: 700;
-        font-size: 1.1rem;
-        color: white;
-        flex-shrink: 0;
+        font-size: 1rem;
     }
-    
-    .cash-icon {
-        background: #FF9800;
+
+    .form-group {
+        margin-bottom: 1.25rem;
     }
-    
-    .mpesa-icon {
-        background: #4CAF50;
-    }
-    
-    .payment-info {
-        flex: 1;
-    }
-    
-    .payment-name {
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
         font-weight: 600;
         color: #24292f;
-        margin-bottom: 0.2rem;
     }
-    
-    .payment-desc {
+
+    .form-control {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+        color: #24292f;
+        background-color: #ffffff;
+        border: 1px solid #d0d7de;
+        border-radius: 6px;
+        transition: all 0.2s;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #0969da;
+        box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.3);
+    }
+
+    .form-text {
         font-size: 0.7rem;
         color: #57606a;
+        margin-top: 0.25rem;
     }
-    
-    .payment-radio {
-        flex-shrink: 0;
+
+    .info-box {
+        margin: 1.5rem 0;
+        padding: 1rem;
+        background: #f6f8fa;
+        border: 1px solid #d0d7de;
+        border-radius: 6px;
+        font-size: 0.75rem;
     }
-    
-    .payment-radio input {
-        width: 18px;
-        height: 18px;
-        cursor: pointer;
-        accent-color: #296807;
+
+    .info-box strong {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #24292f;
     }
-    
-    /* Buttons - Green & Gold */
-    .button-group {
+
+    .info-box ol {
+        margin: 0;
+        padding-left: 1.25rem;
+        color: #57606a;
+    }
+
+    .info-box li {
+        margin-bottom: 0.25rem;
+    }
+
+    .form-actions {
         display: flex;
-        gap: 1rem;
+        gap: 0.75rem;
         margin-top: 1.5rem;
-        flex-wrap: wrap;
     }
-    
-    .btn-green {
-        flex: 1;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0.8rem 1.5rem;
-        background: #296807;
-        color: white;
+
+    .btn {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 500;
         text-decoration: none;
-        border-radius: 40px;
-        font-weight: 600;
-        font-size: 0.95rem;
-        transition: all 0.2s;
-        border: none;
+        border-radius: 6px;
         cursor: pointer;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    }
-    
-    .btn-green:hover {
-        background: #1f5205;
-        transform: translateY(-2px);
-        box-shadow: 0 6px 14px rgba(41, 104, 7, 0.3);
-    }
-    
-    .btn-gold {
-        flex: 1;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0.8rem 1.5rem;
-        background: #f5b81b;
-        color: #2c2c2c;
-        text-decoration: none;
-        border-radius: 40px;
-        font-weight: 600;
-        font-size: 0.95rem;
         transition: all 0.2s;
-        border: none;
-        cursor: pointer;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        border: 1px solid transparent;
         text-align: center;
     }
-    
-    .btn-gold:hover {
-        background: #e0a800;
-        transform: translateY(-2px);
-        box-shadow: 0 6px 14px rgba(245, 184, 27, 0.35);
+
+    .btn-primary {
+        background: #2da44e;
+        color: white;
+        border-color: #2c974b;
     }
-    
-    /* Mobile Responsive */
+
+    .btn-primary:hover {
+        background: #2c974b;
+    }
+
+    .btn-outline {
+        background: transparent;
+        color: #0969da;
+        border-color: #d0d7de;
+    }
+
+    .btn-outline:hover {
+        background: #f3f4f6;
+        border-color: #0969da;
+    }
+
     @media (max-width: 768px) {
-        .glass-card-body {
-            padding: 1.2rem;
+        .payment-container {
+            padding: 0.5rem;
         }
-        
-        .amount-value {
-            font-size: 1.2rem;
-        }
-        
-        .button-group {
+
+        .form-actions {
             flex-direction: column;
         }
-        
-        .btn-green, .btn-gold {
+
+        .form-actions .btn {
             width: 100%;
+            text-align: center;
         }
-        
-        .payment-option {
-            padding: 0.7rem;
-        }
-        
-        .payment-icon {
-            width: 38px;
-            height: 38px;
-            font-size: 0.9rem;
-        }
-        
-        .container {
-            padding: 0 1rem;
-        }
-    }
-    
-    /* Animation */
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    .glass-card {
-        animation: fadeIn 0.4s ease;
     }
 </style>
-
-<script>
-    // Toggle M-Pesa phone field based on selected payment method
-    const paymentRadios = document.querySelectorAll('input[name="payment_method"]');
-    const mpesaField = document.getElementById('mpesa-field');
-    
-    function toggleMpesaField() {
-        const selectedMethod = document.querySelector('input[name="payment_method"]:checked').value;
-        if (selectedMethod === 'mpesa') {
-            mpesaField.style.display = 'block';
-        } else {
-            mpesaField.style.display = 'none';
-        }
-    }
-    
-    paymentRadios.forEach(radio => {
-        radio.addEventListener('change', toggleMpesaField);
-    });
-    
-    // Make payment options clickable
-    const paymentOptions = document.querySelectorAll('.payment-option');
-    paymentOptions.forEach(option => {
-        option.addEventListener('click', function() {
-            const radio = this.querySelector('input[type="radio"]');
-            if (radio) {
-                radio.checked = true;
-                toggleMpesaField();
-            }
-        });
-    });
-    
-    // Initialize on page load
-    toggleMpesaField();
-</script>
 {% endblock %}

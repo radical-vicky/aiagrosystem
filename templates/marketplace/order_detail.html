@@ -1,367 +1,354 @@
 {% extends 'dashboard_base.html' %}
-{% load static %}
 
 {% block page_title %}Order Details{% endblock %}
 
 {% block dashboard_content %}
+<div class="order-detail-container">
+    <div class="order-detail-card">
+        <div class="order-header">
+            <h2>Order Details</h2>
+            <p class="order-number-header">Order #{{ order.order_number }}</p>
+        </div>
+
+        <div class="order-body">
+            <!-- Order Status -->
+            <div class="status-section">
+                <div class="status-label">Order Status</div>
+                <div class="status-badge status-{{ order.status }}">{{ order.status|title }}</div>
+                {% if order.payment_status == 'paid' %}
+                    <div class="payment-badge paid">Payment: Paid</div>
+                {% else %}
+                    <div class="payment-badge pending">Payment: Pending</div>
+                {% endif %}
+            </div>
+
+            <!-- Product Information -->
+            <div class="info-section">
+                <h3>Product Information</h3>
+                <div class="info-row">
+                    <span class="info-label">Product:</span>
+                    <span class="info-value">{{ order.produce.name }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Quantity:</span>
+                    <span class="info-value">{{ order.quantity }} {{ order.produce.unit }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Unit Price:</span>
+                    <span class="info-value">KES {{ order.produce.price|floatformat:0 }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Total Amount:</span>
+                    <span class="info-value highlight">KES {{ order.total_price|floatformat:0 }}</span>
+                </div>
+            </div>
+
+            <!-- Farmer/Buyer Information -->
+            <div class="info-section">
+                <h3>{% if user_role == 'buyer' %}Seller Information{% else %}Buyer Information{% endif %}</h3>
+                <div class="info-row">
+                    <span class="info-label">{% if user_role == 'buyer' %}Farmer:{% else %}Buyer:{% endif %}</span>
+                    <span class="info-value">
+                        {% if user_role == 'buyer' %}
+                            {{ order.produce.farmer.get_full_name|default:order.produce.farmer.username }}
+                        {% else %}
+                            {{ order.buyer.get_full_name|default:order.buyer.username }}
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Location:</span>
+                    <span class="info-value">{{ order.produce.location|default:"Not specified" }}</span>
+                </div>
+            </div>
+
+            <!-- Delivery Information -->
+            <div class="info-section">
+                <h3>Delivery Information</h3>
+                <div class="info-row">
+                    <span class="info-label">Delivery Address:</span>
+                    <span class="info-value">{{ order.delivery_address }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Order Date:</span>
+                    <span class="info-value">{{ order.order_date|date:"F j, Y H:i" }}</span>
+                </div>
+                {% if order.estimated_delivery_date %}
+                <div class="info-row">
+                    <span class="info-label">Estimated Delivery:</span>
+                    <span class="info-value">{{ order.estimated_delivery_date|date:"F j, Y" }}</span>
+                </div>
+                {% endif %}
+                {% if order.tracking_number %}
+                <div class="info-row">
+                    <span class="info-label">Tracking Number:</span>
+                    <span class="info-value">{{ order.tracking_number }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            {% if order.notes %}
+            <div class="info-section">
+                <h3>Notes</h3>
+                <div class="notes-text">{{ order.notes }}</div>
+            </div>
+            {% endif %}
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                {% if user_role == 'buyer' and order.status == 'pending' and order.payment_status != 'paid' %}
+                    <a href="/transactions/pay/{{ order.id }}/" class="btn btn-primary">Pay Now</a>
+                    <a href="/marketplace/order/{{ order.id }}/cancel/" class="btn btn-danger" onclick="return confirm('Are you sure you want to cancel this order?')">Cancel Order</a>
+                {% endif %}
+                
+                {% if user_role == 'farmer' and order.payment_status == 'paid' %}
+                    <form method="POST" action="/marketplace/order/{{ order.id }}/update-status/">
+                        {% csrf_token %}
+                        <select name="status" class="status-select">
+                            <option value="confirmed" {% if order.status == 'confirmed' %}selected{% endif %}>Confirm Order</option>
+                            <option value="processing" {% if order.status == 'processing' %}selected{% endif %}>Processing</option>
+                            <option value="shipped" {% if order.status == 'shipped' %}selected{% endif %}>Shipped</option>
+                            <option value="delivered" {% if order.status == 'delivered' %}selected{% endif %}>Delivered</option>
+                        </select>
+                        <button type="submit" class="btn btn-primary">Update Status</button>
+                    </form>
+                {% endif %}
+                
+                <a href="/marketplace/" class="btn btn-outline">Back to Marketplace</a>
+                <a href="/accounts/" class="btn btn-outline">Back to Dashboard</a>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
-    .order-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 1rem;
-        margin-bottom: 1.5rem;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid var(--border);
+    .order-detail-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 1rem;
     }
-    
-    .order-info {
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-    }
-    
-    .order-label {
-        font-size: 0.7rem;
-        color: var(--text-muted);
-    }
-    
-    .order-value {
-        font-size: 0.875rem;
-        font-weight: 600;
-    }
-    
-    .order-number {
-        font-family: monospace;
-        font-size: 0.8rem;
-        background: var(--bg-light);
-        padding: 0.25rem 0.5rem;
+
+    .order-detail-card {
+        background: #ffffff;
+        border: 1px solid #d0d7de;
         border-radius: 6px;
-    }
-    
-    .status-badge {
-        display: inline-block;
-        padding: 0.25rem 0.75rem;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        font-weight: 500;
-    }
-    
-    .status-pending {
-        background-color: rgba(255,215,0,0.1);
-        color: #b8860b;
-    }
-    
-    .status-confirmed {
-        background-color: rgba(0,200,83,0.1);
-        color: var(--primary);
-    }
-    
-    .status-delivered {
-        background-color: rgba(0,200,83,0.1);
-        color: var(--primary);
-    }
-    
-    .status-cancelled {
-        background-color: rgba(220,53,69,0.1);
-        color: #dc3545;
-    }
-    
-    .detail-section {
-        margin-bottom: 1.5rem;
-    }
-    
-    .section-title {
-        font-size: 0.875rem;
-        font-weight: 600;
-        margin-bottom: 0.75rem;
-        padding-bottom: 0.5rem;
-        border-bottom: 1px solid var(--border);
-    }
-    
-    .product-detail {
-        display: flex;
-        gap: 1rem;
-        flex-wrap: wrap;
-    }
-    
-    .product-image {
-        width: 100px;
-        height: 100px;
-        background: var(--bg-light);
-        border-radius: 8px;
         overflow: hidden;
-        display: flex;
-        align-items: center;
-        justify-content: center;
     }
-    
-    .product-image img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
+
+    .order-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid #eaeef2;
+        background: #f6f8fa;
     }
-    
-    .product-image span {
-        color: var(--text-muted);
-        font-size: 0.7rem;
-    }
-    
-    .product-details {
-        flex: 1;
-    }
-    
-    .product-name {
-        font-size: 1rem;
+
+    .order-header h2 {
+        font-size: 1.25rem;
         font-weight: 600;
+        color: #24292f;
         margin-bottom: 0.25rem;
     }
-    
-    .product-meta {
-        font-size: 0.75rem;
-        color: var(--text-muted);
-        margin-bottom: 0.5rem;
-    }
-    
-    .info-row {
-        display: flex;
-        margin-bottom: 0.75rem;
-    }
-    
-    .info-label {
-        width: 120px;
-        font-size: 0.75rem;
-        color: var(--text-muted);
-    }
-    
-    .info-value {
-        flex: 1;
+
+    .order-number-header {
         font-size: 0.875rem;
-        font-weight: 500;
+        color: #57606a;
+        font-family: monospace;
     }
-    
-    .delivery-address {
-        background: var(--bg-light);
-        padding: 0.75rem;
-        border-radius: 8px;
-        font-size: 0.875rem;
-        line-height: 1.5;
+
+    .order-body {
+        padding: 1.5rem;
     }
-    
-    .payment-summary {
-        background: var(--bg-light);
+
+    .status-section {
+        background: #f6f8fa;
+        border: 1px solid #eaeef2;
+        border-radius: 6px;
         padding: 1rem;
-        border-radius: 12px;
-        margin-top: 1rem;
-    }
-    
-    .summary-row {
+        margin-bottom: 1.5rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 0.5rem 0;
+        flex-wrap: wrap;
+        gap: 1rem;
     }
-    
-    .summary-label {
+
+    .status-label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #24292f;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.3rem 0.8rem;
+        border-radius: 2em;
         font-size: 0.75rem;
-        color: var(--text-muted);
+        font-weight: 500;
     }
-    
-    .summary-value {
-        font-size: 1.25rem;
+
+    .status-pending { background: #fff8c5; color: #9a6700; }
+    .status-confirmed { background: #ddf4ff; color: #0969da; }
+    .status-processing { background: #ddf4ff; color: #0969da; }
+    .status-shipped { background: #dafbe1; color: #1a7f37; }
+    .status-delivered { background: #dafbe1; color: #1a7f37; }
+    .status-cancelled { background: #ffebe9; color: #cf222e; }
+
+    .payment-badge {
+        display: inline-block;
+        padding: 0.3rem 0.8rem;
+        border-radius: 2em;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .payment-badge.paid {
+        background: #dafbe1;
+        color: #1a7f37;
+    }
+
+    .payment-badge.pending {
+        background: #fff8c5;
+        color: #9a6700;
+    }
+
+    .info-section {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #eaeef2;
+    }
+
+    .info-section:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .info-section h3 {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #24292f;
+        margin-bottom: 0.75rem;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #eaeef2;
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        font-size: 0.875rem;
+        color: #57606a;
+    }
+
+    .info-value {
+        font-size: 0.875rem;
+        color: #24292f;
+        font-weight: 500;
+    }
+
+    .info-value.highlight {
+        color: #1a7f37;
         font-weight: 700;
-        color: var(--primary);
     }
-    
+
+    .notes-text {
+        padding: 0.75rem;
+        background: #f6f8fa;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        color: #57606a;
+    }
+
     .action-buttons {
         display: flex;
         gap: 0.75rem;
-        margin-top: 1rem;
+        margin-top: 1.5rem;
         flex-wrap: wrap;
     }
-    
+
+    .status-select {
+        padding: 0.5rem;
+        border: 1px solid #d0d7de;
+        border-radius: 6px;
+        font-size: 0.875rem;
+    }
+
+    .btn {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-decoration: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid transparent;
+        text-align: center;
+    }
+
     .btn-primary {
-        background-color: var(--primary);
+        background: #2da44e;
         color: white;
-        border: none;
-        padding: 0.5rem 1rem;
-        border-radius: 8px;
-        cursor: pointer;
-        text-decoration: none;
-        font-size: 0.8rem;
-        font-weight: 500;
-        display: inline-block;
+        border-color: #2c974b;
     }
-    
+
     .btn-primary:hover {
-        background-color: var(--primary-dark);
+        background: #2c974b;
     }
-    
+
     .btn-outline {
-        background-color: transparent;
-        border: 1px solid var(--border);
-        color: var(--text-dark);
-        padding: 0.5rem 1rem;
-        border-radius: 8px;
-        cursor: pointer;
-        text-decoration: none;
-        font-size: 0.8rem;
-        font-weight: 500;
-        display: inline-block;
+        background: transparent;
+        color: #0969da;
+        border-color: #d0d7de;
     }
-    
+
     .btn-outline:hover {
-        background-color: var(--bg-light);
+        background: #f3f4f6;
+        border-color: #0969da;
     }
-    
+
     .btn-danger {
-        background-color: transparent;
-        border: 1px solid #dc3545;
-        color: #dc3545;
-        padding: 0.5rem 1rem;
-        border-radius: 8px;
-        cursor: pointer;
-        text-decoration: none;
-        font-size: 0.8rem;
-        font-weight: 500;
-        display: inline-block;
+        background: #cf222e;
+        color: white;
+        border-color: #cf222e;
     }
-    
+
     .btn-danger:hover {
-        background-color: rgba(220,53,69,0.1);
+        background: #a51d26;
     }
-    
+
     @media (max-width: 768px) {
-        .order-header {
-            flex-direction: column;
-            align-items: flex-start;
+        .order-detail-container {
+            padding: 0.5rem;
         }
-        
+
+        .status-section {
+            flex-direction: column;
+            text-align: center;
+        }
+
         .info-row {
             flex-direction: column;
+            gap: 0.25rem;
         }
-        
-        .info-label {
-            width: auto;
-            margin-bottom: 0.25rem;
-        }
-        
+
         .action-buttons {
             flex-direction: column;
         }
-        
-        .action-buttons a {
+
+        .action-buttons .btn {
+            width: 100%;
             text-align: center;
+        }
+
+        .status-select {
+            width: 100%;
         }
     }
 </style>
-
-<div class="card">
-    <div class="card-title">Order Details</div>
-    
-    <!-- Order Header -->
-    <div class="order-header">
-        <div class="order-info">
-            <div class="order-label">Order Number</div>
-            <div class="order-value order-number">{{ order.order_number }}</div>
-        </div>
-        <div class="order-info">
-            <div class="order-label">Order Date</div>
-            <div class="order-value">{{ order.order_date|date:"F j, Y, g:i a" }}</div>
-        </div>
-        <div class="order-info">
-            <div class="order-label">Status</div>
-            <div class="order-value">
-                {% if order.status == 'pending' %}
-                    <span class="status-badge status-pending">Pending</span>
-                {% elif order.status == 'confirmed' %}
-                    <span class="status-badge status-confirmed">Confirmed</span>
-                {% elif order.status == 'delivered' %}
-                    <span class="status-badge status-delivered">Delivered</span>
-                {% elif order.status == 'cancelled' %}
-                    <span class="status-badge status-cancelled">Cancelled</span>
-                {% else %}
-                    <span class="status-badge">{{ order.status|title }}</span>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-    
-    <!-- Product Information -->
-    <div class="detail-section">
-        <div class="section-title">Product Information</div>
-        <div class="product-detail">
-            <div class="product-image">
-                {% if order.produce.image %}
-                    <img src="{{ order.produce.image.url }}" alt="{{ order.produce.name }}">
-                {% else %}
-                    <span>No image</span>
-                {% endif %}
-            </div>
-            <div class="product-details">
-                <div class="product-name">{{ order.produce.name }}</div>
-                <div class="product-meta">by {{ order.produce.farmer.username }}</div>
-                <div class="info-row">
-                    <div class="info-label">Price</div>
-                    <div class="info-value">KES {{ order.produce.price }} per {{ order.produce.unit }}</div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">Quantity</div>
-                    <div class="info-value">{{ order.quantity }} {{ order.produce.unit }}</div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">Subtotal</div>
-                    <div class="info-value">KES {{ order.total_price|floatformat:0 }}</div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Delivery Information -->
-    <div class="detail-section">
-        <div class="section-title">Delivery Information</div>
-        <div class="delivery-address">
-            {{ order.delivery_address|linebreaks }}
-        </div>
-        {% if order.notes %}
-        <div style="margin-top: 0.75rem;">
-            <div class="info-label" style="margin-bottom: 0.25rem;">Additional Notes</div>
-            <div class="delivery-address" style="background: var(--bg-light);">
-                {{ order.notes }}
-            </div>
-        </div>
-        {% endif %}
-    </div>
-    
-    <!-- Payment Summary -->
-    <div class="payment-summary">
-        <div class="summary-row">
-            <div class="summary-label">Subtotal</div>
-            <div class="summary-value">KES {{ order.total_price|floatformat:0 }}</div>
-        </div>
-        <div class="summary-row">
-            <div class="summary-label">Delivery Fee</div>
-            <div class="summary-value">KES 0</div>
-        </div>
-        <div class="summary-row" style="border-top: 1px solid var(--border); margin-top: 0.5rem; padding-top: 0.5rem;">
-            <div class="summary-label">Total</div>
-            <div class="summary-value">KES {{ order.total_price|floatformat:0 }}</div>
-        </div>
-    </div>
-    
-    <!-- Action Buttons -->
-    <div class="action-buttons">
-        {% if user.profile.role == 'buyer' %}
-            {% if order.status == 'pending' %}
-                <a href="{% url 'initiate_payment' order.id %}" class="btn-primary">Proceed to Payment</a>
-                <a href="{% url 'cancel_order' order.id %}" class="btn-danger" onclick="return confirm('Are you sure you want to cancel this order?')">Cancel Order</a>
-            {% endif %}
-            <a href="{% url 'marketplace' %}" class="btn-outline">Continue Shopping</a>
-        {% elif user.profile.role == 'farmer' %}
-            <a href="{% url 'dashboard' %}" class="btn-outline">Back to Dashboard</a>
-        {% endif %}
-        <a href="{% url 'marketplace' %}" class="btn-outline">Browse Marketplace</a>
-    </div>
-</div>
 {% endblock %}

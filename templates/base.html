@@ -664,8 +664,8 @@
             
             <div class="nav-links" id="navLinks">
                 <a href="/#features">Features</a>
-                <a href="{% url 'marketplace' %}">Marketplace</a>
-                <a href="{% url 'market_insights' %}">AI Insights</a>
+                <a href="/marketplace/">Marketplace</a>
+                <a href="/ai/insights/">AI Insights</a>
                 <a href="#how-it-works">How It Works</a>
                 {% if user.is_authenticated %}
                     <div class="user-dropdown" id="userDropdown">
@@ -677,15 +677,15 @@
                             {% endif %}
                         </div>
                         <div class="dropdown-content">
-                            <a href="{% url 'dashboard' %}">Dashboard</a>
-                            <a href="{% url 'profile' %}">Profile</a>
+                            <a href="/accounts/">Dashboard</a>
+                            <a href="/accounts/profile/">Profile</a>
                             <div class="dropdown-divider"></div>
-                            <a href="{% url 'account_logout' %}">Sign Out</a>
+                            <a href="/accounts/logout/">Sign Out</a>
                         </div>
                     </div>
                 {% else %}
-                    <a href="{% url 'account_login' %}" class="btn-outline">Sign In</a>
-                    <a href="{% url 'account_signup' %}" class="btn-primary">Sign Up</a>
+                    <a href="/accounts/login/" class="btn-outline">Sign In</a>
+                    <a href="/accounts/signup/" class="btn-primary">Sign Up</a>
                 {% endif %}
             </div>
         </div>
@@ -729,13 +729,11 @@
             <div class="cta-title">Grow Smarter with AI</div>
             <div class="cta-description">Join thousands of farmers and agribusinesses using predictive analytics to maximize profit and reduce waste.</div>
             <div class="cta-buttons">
-                <a href="{% url 'account_signup' %}" class="cta-btn-primary">Get Started</a>
-                <a href="{% url 'market_insights' %}" class="cta-btn-secondary">Explore AI Insights</a>
+                <a href="/accounts/signup/" class="cta-btn-primary">Get Started</a>
+                <a href="/ai/insights/" class="cta-btn-secondary">Explore AI Insights</a>
             </div>
         </div>
     </div>
-
-    
 
     <!-- Glass Footer -->
     <footer class="site-footer">

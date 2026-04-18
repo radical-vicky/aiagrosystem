@@ -1,0 +1,213 @@
+{% extends 'dashboard_base.html' %}
+
+{% block page_title %}Verify OTP{% endblock %}
+
+{% block dashboard_content %}
+<div class="verify-container">
+    <div class="verify-card">
+        <div class="verify-header">
+            <h2>Enter Verification Code</h2>
+            <p class="header-description">We sent a 6-digit code to {{ phone_number }}</p>
+        </div>
+
+        <div class="verify-body">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="POST">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label for="{{ form.otp_code.id_for_label }}" class="form-label">
+                        Verification Code
+                    </label>
+                    <input type="text" 
+                           name="{{ form.otp_code.name }}" 
+                           id="{{ form.otp_code.id_for_label }}" 
+                           class="form-control {% if form.otp_code.errors %}is-invalid{% endif %}"
+                           placeholder="000000"
+                           maxlength="6"
+                           autocomplete="off"
+                           autofocus>
+                    {% if form.otp_code.errors %}
+                        <div class="invalid-feedback">
+                            {{ form.otp_code.errors.0 }}
+                        </div>
+                    {% endif %}
+                    <div class="form-text">
+                        The code will expire in 10 minutes
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Verify</button>
+                    <a href="{% url 'accounts:resend_otp' %}" class="btn btn-outline">Resend Code</a>
+                    <a href="{% url 'accounts:verify_phone' %}" class="btn btn-outline">Change Number</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .verify-container {
+        max-width: 500px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    .verify-card {
+        background: #ffffff;
+        border: 1px solid #d0d7de;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+
+    .verify-header {
+        padding: 1.5rem 1.5rem 0.5rem;
+        border-bottom: 1px solid #eaeef2;
+    }
+
+    .verify-header h2 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #24292f;
+        margin-bottom: 0.25rem;
+    }
+
+    .header-description {
+        font-size: 0.75rem;
+        color: #57606a;
+        margin-bottom: 1rem;
+    }
+
+    .verify-body {
+        padding: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #24292f;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        font-size: 1rem;
+        font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', monospace;
+        text-align: center;
+        letter-spacing: 0.25rem;
+        color: #24292f;
+        background-color: #ffffff;
+        border: 1px solid #d0d7de;
+        border-radius: 6px;
+        transition: all 0.2s;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #0969da;
+        box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.3);
+    }
+
+    .form-control.is-invalid {
+        border-color: #cf222e;
+    }
+
+    .form-control.is-invalid:focus {
+        border-color: #cf222e;
+        box-shadow: 0 0 0 3px rgba(207, 34, 46, 0.3);
+    }
+
+    .invalid-feedback {
+        color: #cf222e;
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+    }
+
+    .form-text {
+        font-size: 0.7rem;
+        color: #57606a;
+        margin-top: 0.25rem;
+        text-align: center;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: center;
+        margin-top: 1.5rem;
+    }
+
+    .btn {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-decoration: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid transparent;
+    }
+
+    .btn-primary {
+        background: #2da44e;
+        color: white;
+        border-color: #2c974b;
+    }
+
+    .btn-primary:hover {
+        background: #2c974b;
+    }
+
+    .btn-outline {
+        background: transparent;
+        color: #0969da;
+        border-color: #d0d7de;
+    }
+
+    .btn-outline:hover {
+        background: #f3f4f6;
+        border-color: #0969da;
+    }
+
+    .alert {
+        padding: 0.75rem 1rem;
+        margin-bottom: 1rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        border: 1px solid transparent;
+    }
+
+    .alert-success {
+        background: #dafbe1;
+        border-color: #ace5b8;
+        color: #1a7f37;
+    }
+
+    .alert-error {
+        background: #ffebe9;
+        border-color: #ffc1ba;
+        color: #cf222e;
+    }
+
+    .alert-warning {
+        background: #fff8c5;
+        border-color: #f7e39b;
+        color: #9a6700;
+    }
+</style>
+{% endblock %}

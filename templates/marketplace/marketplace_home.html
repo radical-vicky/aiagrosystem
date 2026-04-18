@@ -25,7 +25,6 @@
         gap: 1.5rem;
     }
     
-    /* Filters Sidebar - JustWatch style */
     .filters-sidebar {
         width: 220px;
         flex-shrink: 0;
@@ -125,12 +124,10 @@
         font-size: 0.75rem;
     }
     
-    /* Main Content */
     .marketplace-main {
         flex: 1;
     }
     
-    /* Search Bar */
     .search-bar {
         margin-bottom: 1rem;
     }
@@ -175,7 +172,6 @@
         align-items: center;
     }
     
-    /* Results Count */
     .results-count {
         font-size: 0.75rem;
         color: var(--text-muted);
@@ -184,7 +180,6 @@
         border-bottom: 1px solid var(--border);
     }
     
-    /* Products Grid - JustWatch style */
     .products-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -288,12 +283,6 @@
         grid-column: 1 / -1;
     }
     
-    .empty-state-icon {
-        font-size: 3rem;
-        margin-bottom: 0.5rem;
-    }
-    
-    /* Mobile Responsive */
     @media (max-width: 768px) {
         .marketplace-layout {
             flex-direction: column;
@@ -340,16 +329,15 @@
 </div>
 
 <div class="marketplace-layout">
-    <!-- Filters Sidebar - JustWatch style -->
     <aside class="filters-sidebar">
         <button class="filter-toggle" onclick="toggleFilters()">Filters ▼</button>
         
         <div class="filter-section">
             <h3>Categories</h3>
             <div class="filter-options">
-                <a href="{% url 'marketplace' %}" class="filter-link {% if not request.GET.category %}active{% endif %}">All Products</a>
+                <a href="/marketplace/" class="filter-link {% if not request.GET.category %}active{% endif %}">All Products</a>
                 {% for category in categories %}
-                <a href="{% url 'marketplace' %}?category={{ category.id }}" 
+                <a href="/marketplace/?category={{ category.id }}" 
                    class="filter-link {% if request.GET.category == category.id|stringformat:'s' %}active{% endif %}">
                     {{ category.name }}
                 </a>
@@ -370,28 +358,24 @@
         </div>
     </aside>
 
-    <!-- Main Content -->
     <main class="marketplace-main">
-        <!-- Search Bar -->
         <div class="search-bar">
             <form method="get">
                 <input type="text" name="q" placeholder="Search produce..." value="{{ request.GET.q }}">
                 <button type="submit">Search</button>
                 {% if request.GET.q or request.GET.category %}
-                    <a href="{% url 'marketplace' %}" class="clear-btn">Clear</a>
+                    <a href="/marketplace/" class="clear-btn">Clear</a>
                 {% endif %}
             </form>
         </div>
 
-        <!-- Results Count -->
         <div class="results-count">
             Showing {{ produce_list|length }} product{% if produce_list|length != 1 %}s{% endif %}
         </div>
 
-        <!-- Products Grid -->
         <div class="products-grid">
             {% for produce in produce_list %}
-            <div class="product-card" onclick="location.href='{% url 'produce_detail' produce.id %}'">
+            <div class="product-card" onclick="location.href='/marketplace/produce/{{ produce.id }}/'">
                 <div class="product-image">
                     {% if produce.image %}
                         <img src="{{ produce.image.url }}" alt="{{ produce.name }}">
@@ -404,12 +388,11 @@
                     <div class="product-location">{{ produce.location }}</div>
                     <div class="product-price">KES {{ produce.price|floatformat:0 }} <span>/{{ produce.unit }}</span></div>
                     <div class="product-stock">{{ produce.quantity|floatformat:0 }} {{ produce.unit }} available</div>
-                    <a href="{% url 'produce_detail' produce.id %}" class="btn-view" onclick="event.stopPropagation()">View Details</a>
+                    <a href="/marketplace/produce/{{ produce.id }}/" class="btn-view" onclick="event.stopPropagation()">View Details</a>
                 </div>
             </div>
             {% empty %}
             <div class="empty-state">
-                <div class="empty-state-icon">🌾</div>
                 <div>No produce available right now.</div>
                 <div style="font-size: 0.75rem; margin-top: 0.5rem;">Check back later for fresh produce from our farmers.</div>
             </div>
@@ -426,7 +409,6 @@
         });
     }
     
-    // Price range filter
     const priceRange = document.getElementById('priceRange');
     const minPriceInput = document.getElementById('minPrice');
     const maxPriceInput = document.getElementById('maxPrice');
@@ -449,7 +431,6 @@
             }
         });
         
-        // Update results count
         const visibleCount = document.querySelectorAll('.product-card:not([style*="display: none"])').length;
         const resultsCount = document.querySelector('.results-count');
         if (resultsCount) {

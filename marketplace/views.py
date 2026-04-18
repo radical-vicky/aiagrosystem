@@ -1,3 +1,5 @@
+# marketplace/views.py
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -124,7 +126,7 @@ def add_produce(request):
             produce.farmer = request.user
             produce.save()
             messages.success(request, f'{produce.name} has been added successfully!')
-            return redirect('produce_detail', pk=produce.pk)
+            return redirect(f'/marketplace/produce/{produce.pk}/')
     else:
         form = ProduceForm()
     
@@ -145,12 +147,14 @@ def edit_produce(request, pk):
         if form.is_valid():
             produce = form.save()
             messages.success(request, f'{produce.name} has been updated successfully!')
-            return redirect('produce_detail', pk=produce.pk)
+            return redirect(f'/marketplace/produce/{produce.pk}/')
     else:
         form = ProduceForm(instance=produce)
     
     return render(request, 'marketplace/edit_produce.html', {'form': form, 'produce': produce})
 
+
+# marketplace/views.py
 
 @login_required
 @require_http_methods(["POST"])
@@ -159,18 +163,18 @@ def delete_produce(request, pk):
     produce = get_object_or_404(Produce, pk=pk)
     
     if produce.farmer != request.user:
-        return JsonResponse({'error': 'Permission denied'}, status=403)
+        messages.error(request, 'You do not have permission to delete this product.')
+        return redirect('marketplace')
     
+    # Soft delete
     produce.is_deleted = True
     produce.status = 'discontinued'
     produce.save()
     
     messages.success(request, f'{produce.name} has been removed from your listings.')
     
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return JsonResponse({'success': True, 'message': 'Product deleted successfully'})
-    
-    return redirect('dashboard')
+    # Redirect back to the listings page
+    return redirect('accounts:my_listings')
 
 
 def products_by_category(request, category_id):
@@ -223,41 +227,59 @@ def get_featured_products(request):
 
 @login_required
 def place_order(request, pk):
-    """Place order for produce - only buyers can place orders"""
+    """Place order for produce - allows any authenticated user to buy from other farmers"""
     produce = get_object_or_404(Produce, pk=pk)
     
-    if request.user.profile.role != 'buyer':
-        messages.error(request, 'Only buyers can place orders.')
+    # Prevent farmers from buying their own products
+    if request.user == produce.farmer:
+        messages.error(request, 'You cannot purchase your own products.')
         return redirect('produce_detail', pk=pk)
     
     if request.method == 'POST':
         from decimal import Decimal
         
-        quantity = Decimal(request.POST.get('quantity'))
-        delivery_address = request.POST.get('delivery_address')
-        notes = request.POST.get('notes', '')
-        
-        if quantity > produce.quantity:
-            messages.error(request, f'Insufficient quantity available! Only {produce.quantity} {produce.unit} available.')
-            return redirect('produce_detail', pk=produce.pk)
-        
-        order = Order.objects.create(
-            buyer=request.user,
-            produce=produce,
-            quantity=quantity,
-            delivery_address=delivery_address,
-            notes=notes
-        )
-        
-        # Update produce quantity
-        produce.quantity -= quantity
-        if produce.quantity <= 0:
-            produce.status = 'sold_out'
-        produce.save()
-        
-        messages.success(request, f'Order {order.order_number} placed successfully!')
-        return redirect('order_detail', pk=order.pk)
+        try:
+            quantity = Decimal(request.POST.get('quantity'))
+            delivery_address = request.POST.get('delivery_address')
+            notes = request.POST.get('notes', '')
+            
+            if quantity <= 0:
+                messages.error(request, 'Please enter a valid quantity.')
+                return redirect(f'/marketplace/produce/{produce.pk}/')
+            
+            if quantity > produce.quantity:
+                messages.error(request, f'Insufficient quantity available! Only {produce.quantity} {produce.unit} available.')
+                return redirect(f'/marketplace/produce/{produce.pk}/')
+            
+            # Calculate total price
+            total_price = quantity * produce.price
+            
+            order = Order.objects.create(
+                buyer=request.user,
+                produce=produce,
+                quantity=quantity,
+                total_price=total_price,
+                delivery_address=delivery_address,
+                notes=notes,
+                status='pending',
+                payment_status='pending'
+            )
+            
+            # Update produce quantity
+            produce.quantity -= quantity
+            if produce.quantity <= 0:
+                produce.status = 'sold_out'
+            produce.save()
+            
+            messages.success(request, f'Order #{order.order_number} placed successfully! Please complete payment.')
+            # Redirect to transactions app for payment
+            return redirect('transactions:initiate_payment', order_id=order.pk)
+            
+        except Exception as e:
+            messages.error(request, f'Error placing order: {str(e)}')
+            return redirect(f'/marketplace/produce/{produce.pk}/')
     
+    # GET request - show order form
     return render(request, 'marketplace/place_order.html', {'produce': produce})
 
 
@@ -265,33 +287,32 @@ def place_order(request, pk):
 def order_detail(request, pk):
     """Order detail view - buyers see their orders, farmers see orders for their products"""
     try:
+        # Get the order
+        order = get_object_or_404(Order, pk=pk)
+        
         # Check if user is buyer of this order
-        order_as_buyer = Order.objects.filter(pk=pk, buyer=request.user).first()
-        
-        # Check if user is farmer who owns the product in this order
-        order_as_farmer = Order.objects.filter(pk=pk, produce__farmer=request.user).first()
-        
-        if order_as_buyer:
+        if order.buyer == request.user:
             # User is the buyer
             return render(request, 'marketplace/order_detail.html', {
-                'order': order_as_buyer,
+                'order': order,
                 'user_role': 'buyer'
             })
-        elif order_as_farmer:
+        
+        # Check if user is farmer who owns the product in this order
+        if order.produce.farmer == request.user:
             # User is the farmer who owns the product
             return render(request, 'marketplace/order_detail.html', {
-                'order': order_as_farmer,
+                'order': order,
                 'user_role': 'farmer'
             })
-        else:
-            messages.error(request, 'Order not found or you do not have permission to view it.')
-            return redirect('dashboard')
-            
+        
+        # User has no permission to view this order
+        messages.error(request, 'You do not have permission to view this order.')
+        return redirect('accounts:dashboard')
+        
     except Exception as e:
         messages.error(request, f'Error loading order: {str(e)}')
-        return redirect('dashboard')
-
-
+        return redirect('accounts:dashboard')
 @login_required
 def cancel_order(request, pk):
     """Cancel order - only the buyer can cancel their own order"""
@@ -302,7 +323,7 @@ def cancel_order(request, pk):
             messages.error(request, 'Order not found or you do not have permission to cancel it.')
             return redirect('dashboard')
         
-        if order.status == 'pending':
+        if order.status == 'pending' and order.payment_status != 'paid':
             order.status = 'cancelled'
             order.save()
             
@@ -320,3 +341,38 @@ def cancel_order(request, pk):
         messages.error(request, f'Error cancelling order: {str(e)}')
     
     return redirect('dashboard')
+
+
+# marketplace/views.py
+
+@login_required
+def delete_produce_confirmation(request, pk):
+    """Show delete confirmation page"""
+    produce = get_object_or_404(Produce, pk=pk)
+    
+    if produce.farmer != request.user:
+        messages.error(request, 'You do not have permission to delete this product.')
+        return redirect('marketplace')
+    
+    return render(request, 'marketplace/confirm_delete.html', {'produce': produce})
+
+# marketplace/views.py
+
+@login_required
+def delete_produce(request, pk):
+    """Soft delete produce - accepts both GET and POST"""
+    produce = get_object_or_404(Produce, pk=pk)
+    
+    if produce.farmer != request.user:
+        messages.error(request, 'You do not have permission to delete this product.')
+        return redirect('marketplace')
+    
+    # Soft delete
+    produce.is_deleted = True
+    produce.status = 'discontinued'
+    produce.save()
+    
+    messages.success(request, f'{produce.name} has been removed from your listings.')
+    
+    # Redirect back to the listings page
+    return redirect('accounts:my_listings')

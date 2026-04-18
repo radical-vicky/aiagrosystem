@@ -1,305 +1,433 @@
 {% extends 'dashboard_base.html' %}
-{% load static %}
 
-{% block page_title %}My Profile{% endblock %}
+{% block page_title %}Profile{% endblock %}
 
 {% block dashboard_content %}
+<div class="profile-container">
+    <div class="profile-card">
+        <div class="profile-header">
+            <div class="profile-avatar">
+                {% if user.profile.profile_picture %}
+                    <img src="{{ user.profile.profile_picture.url }}" alt="{{ user.username }}">
+                {% else %}
+                    <span>{{ user.username|make_list|first|upper }}</span>
+                {% endif %}
+            </div>
+            <div class="profile-title">
+                <h2>{{ user.get_full_name|default:user.username }}</h2>
+                <p>{{ user.profile.role|title }} • Member since {{ user.date_joined|date:"M Y" }}</p>
+            </div>
+            <div class="action-buttons">
+                <a href="{% url 'accounts:edit_profile' %}" class="edit-btn">Edit Profile</a>
+                <a href="{% url 'accounts:change_password' %}" class="change-password-btn">Change Password</a>
+            </div>
+        </div>
+
+        <div class="profile-grid">
+            <!-- Personal Information -->
+            <div class="info-card">
+                <h3>Personal Information</h3>
+                <div class="info-row">
+                    <span class="info-label">Username:</span>
+                    <span class="info-value">{{ user.username }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Email:</span>
+                    <span class="info-value">{{ user.email }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">First Name:</span>
+                    <span class="info-value">{{ user.first_name|default:"Not specified" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Last Name:</span>
+                    <span class="info-value">{{ user.last_name|default:"Not specified" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Phone Number:</span>
+                    <span class="info-value">{{ user.profile.phone_number|default:"Not specified" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Location:</span>
+                    <span class="info-value">{{ user.profile.location|default:"Not specified" }}</span>
+                </div>
+            </div>
+
+            <!-- Verification Status -->
+            <div class="info-card">
+                <h3>Verification Status</h3>
+                <div class="info-row">
+                    <span class="info-label">Email Verification:</span>
+                    <span class="info-value">
+                        {% if user.email_verified %}
+                            <span class="status-badge verified">Verified</span>
+                        {% else %}
+                            <span class="status-badge pending">Pending</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Phone Verification:</span>
+                    <span class="info-value">
+                        {% if user.profile.phone_verified %}
+                            <span class="status-badge verified">Verified</span>
+                        {% else %}
+                            <span class="status-badge pending">Pending</span>
+                            <a href="{% url 'accounts:verify_phone' %}" class="verify-link">Verify Now</a>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">ID Verification:</span>
+                    <span class="info-value">
+                        {% if user.profile.id_verified %}
+                            <span class="status-badge verified">Verified</span>
+                        {% else %}
+                            <span class="status-badge pending">Pending</span>
+                            <a href="{% url 'accounts:upload_government_id' %}" class="verify-link">Upload ID</a>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Farmer Verification:</span>
+                    <span class="info-value">
+                        {% if user.profile.is_verified_farmer %}
+                            <span class="status-badge verified">Verified Farmer</span>
+                        {% else %}
+                            <span class="status-badge pending">Pending</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Farmer Details (if farmer) -->
+            {% if user.profile.role == 'farmer' and farmer_details %}
+            <div class="info-card">
+                <h3>Farm Information</h3>
+                <div class="info-row">
+                    <span class="info-label">Farm Name:</span>
+                    <span class="info-value">{{ farmer_details.farm_name }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Farm Location:</span>
+                    <span class="info-value">{{ farmer_details.farm_location }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Farm Size:</span>
+                    <span class="info-value">{{ farmer_details.farm_size }} acres</span>
+                </div>
+                {% if farmer_details.certification %}
+                <div class="info-row">
+                    <span class="info-label">Certification:</span>
+                    <span class="info-value">{{ farmer_details.certification }}</span>
+                </div>
+                {% endif %}
+                {% if farmer_details.registration_number %}
+                <div class="info-row">
+                    <span class="info-label">Registration Number:</span>
+                    <span class="info-value">{{ farmer_details.registration_number }}</span>
+                </div>
+                {% endif %}
+                {% if not farmer_details.is_verified %}
+                <div class="info-row">
+                    <span class="info-label">Farmer Status:</span>
+                    <span class="info-value">
+                        <span class="status-badge pending">Awaiting Verification</span>
+                        <a href="{% url 'accounts:verification_status' %}" class="verify-link">Check Status</a>
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Buyer Details (if buyer) -->
+            {% if user.profile.role == 'buyer' and buyer_details %}
+            <div class="info-card">
+                <h3>Buyer Information</h3>
+                <div class="info-row">
+                    <span class="info-label">Company Name:</span>
+                    <span class="info-value">{{ buyer_details.company_name|default:"Not specified" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Business Registration:</span>
+                    <span class="info-value">{{ buyer_details.business_registration|default:"Not specified" }}</span>
+                </div>
+                {% if buyer_details.preferred_categories %}
+                <div class="info-row">
+                    <span class="info-label">Preferred Categories:</span>
+                    <span class="info-value">{{ buyer_details.preferred_categories }}</span>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Account Actions -->
+            <div class="info-card">
+                <h3>Account Actions</h3>
+                <div class="action-links">
+                    <a href="{% url 'accounts:dashboard' %}" class="action-link">Back to Dashboard</a>
+                    <a href="{% url 'accounts:my_stats' %}" class="action-link">View Statistics</a>
+                    <a href="{% url 'accounts:verification_status' %}" class="action-link">Verification Status</a>
+                    <button class="action-link delete" onclick="confirmDelete()">Delete Account</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
     .profile-container {
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 1rem;
     }
-    
+
+    .profile-card {
+        background: #ffffff;
+        border: 1px solid #d0d7de;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+
     .profile-header {
         display: flex;
         align-items: center;
         gap: 1.5rem;
-        padding-bottom: 1.5rem;
-        border-bottom: 1px solid var(--border);
+        padding: 1.5rem;
+        border-bottom: 1px solid #eaeef2;
         flex-wrap: wrap;
     }
-    
+
     .profile-avatar {
         width: 80px;
         height: 80px;
-        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        background: linear-gradient(135deg, #2da44e, #1a7f37);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         overflow: hidden;
     }
-    
+
     .profile-avatar img {
         width: 100%;
         height: 100%;
         object-fit: cover;
     }
-    
+
     .profile-avatar span {
         font-size: 2rem;
         font-weight: 600;
         color: white;
     }
-    
+
+    .profile-title {
+        flex: 1;
+    }
+
     .profile-title h2 {
         font-size: 1.25rem;
         font-weight: 600;
+        color: #24292f;
         margin-bottom: 0.25rem;
     }
-    
+
     .profile-title p {
         font-size: 0.75rem;
-        color: var(--text-muted);
+        color: #57606a;
     }
-    
+
+    .action-buttons {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .edit-btn, .change-password-btn {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-decoration: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid transparent;
+    }
+
+    .edit-btn {
+        background: #2da44e;
+        color: white;
+        border-color: #2c974b;
+    }
+
+    .edit-btn:hover {
+        background: #2c974b;
+    }
+
+    .change-password-btn {
+        background: transparent;
+        color: #0969da;
+        border-color: #d0d7de;
+    }
+
+    .change-password-btn:hover {
+        background: #f3f4f6;
+        border-color: #0969da;
+    }
+
     .profile-grid {
         display: grid;
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
         gap: 1.5rem;
+        padding: 1.5rem;
     }
-    
+
     .info-card {
-        background: white;
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 1.25rem;
+        background: #ffffff;
+        border: 1px solid #eaeef2;
+        border-radius: 6px;
+        padding: 1rem;
     }
-    
+
     .info-card h3 {
         font-size: 0.875rem;
         font-weight: 600;
+        color: #24292f;
         margin-bottom: 1rem;
-        padding-bottom: 0.75rem;
-        border-bottom: 1px solid var(--border);
-        color: var(--primary);
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #eaeef2;
     }
-    
+
     .info-row {
         display: flex;
-        margin-bottom: 1rem;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #eaeef2;
     }
-    
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
     .info-label {
-        width: 100px;
         font-size: 0.75rem;
-        color: var(--text-muted);
-        flex-shrink: 0;
+        font-weight: 600;
+        color: #24292f;
     }
-    
+
     .info-value {
-        font-size: 0.875rem;
-        color: var(--text-dark);
-        font-weight: 500;
-    }
-    
-    .bio-text {
-        font-size: 0.875rem;
-        color: var(--text-muted);
-        line-height: 1.5;
-        margin-top: 0.5rem;
-    }
-    
-    .edit-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem 1rem;
-        background-color: var(--primary);
-        color: white;
-        border: none;
-        border-radius: 8px;
         font-size: 0.75rem;
+        color: #57606a;
+        text-align: right;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.2rem 0.5rem;
+        border-radius: 2em;
+        font-size: 0.65rem;
         font-weight: 500;
-        cursor: pointer;
+    }
+
+    .status-badge.verified {
+        background: #dafbe1;
+        color: #1a7f37;
+    }
+
+    .status-badge.pending {
+        background: #fff8c5;
+        color: #9a6700;
+    }
+
+    .verify-link {
+        display: inline-block;
+        margin-left: 0.5rem;
+        font-size: 0.65rem;
+        color: #0969da;
         text-decoration: none;
-        transition: all 0.2s;
     }
-    
-    .edit-btn:hover {
-        background-color: var(--primary-dark);
-        transform: translateY(-1px);
+
+    .verify-link:hover {
+        text-decoration: underline;
     }
-    
-    .change-password-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem 1rem;
-        background-color: transparent;
-        color: var(--text-dark);
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        font-size: 0.75rem;
-        font-weight: 500;
-        cursor: pointer;
-        text-decoration: none;
-        transition: all 0.2s;
-    }
-    
-    .change-password-btn:hover {
-        background-color: var(--bg-light);
-    }
-    
-    .action-buttons {
+
+    .action-links {
         display: flex;
-        gap: 1rem;
-        margin-top: 0.5rem;
+        flex-direction: column;
+        gap: 0.5rem;
     }
-    
+
+    .action-link {
+        display: block;
+        padding: 0.5rem;
+        color: #0969da;
+        text-decoration: none;
+        font-size: 0.875rem;
+        text-align: center;
+        border: 1px solid #d0d7de;
+        border-radius: 6px;
+        transition: all 0.2s;
+    }
+
+    .action-link:hover {
+        background: #f3f4f6;
+    }
+
+    .action-link.delete {
+        color: #cf222e;
+    }
+
+    .action-link.delete:hover {
+        background: #ffebe9;
+        border-color: #cf222e;
+    }
+
     @media (max-width: 768px) {
-        .profile-grid {
-            grid-template-columns: 1fr;
+        .profile-container {
+            padding: 0.5rem;
         }
-        
-        .info-row {
+
+        .profile-header {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .profile-title {
+            text-align: center;
+        }
+
+        .action-buttons {
+            width: 100%;
             flex-direction: column;
         }
-        
-        .info-label {
-            width: auto;
-            margin-bottom: 0.25rem;
+
+        .action-buttons .edit-btn,
+        .action-buttons .change-password-btn {
+            width: 100%;
+            text-align: center;
+        }
+
+        .profile-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .info-row {
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .info-value {
+            text-align: left;
         }
     }
 </style>
 
-<div class="profile-container">
-    <!-- Profile Header -->
-    <div class="profile-header">
-        <div class="profile-avatar">
-            {% if user.profile.profile_picture %}
-                <img src="{{ user.profile.profile_picture.url }}" alt="{{ user.username }}">
-            {% else %}
-                <span>{{ user.username|make_list|first|upper }}</span>
-            {% endif %}
-        </div>
-        <div class="profile-title">
-            <h2>{{ user.get_full_name|default:user.username }}</h2>
-            <p>{{ user.profile.role|title }} • Member since {{ user.date_joined|date:"M Y" }}</p>
-        </div>
-        <div class="action-buttons" style="margin-left: auto;">
-            <a href="{% url 'edit_profile' %}" class="edit-btn">Edit Profile</a>
-            <a href="{% url 'change_password' %}" class="change-password-btn">Change Password</a>
-        </div>
-    </div>
-    
-    <!-- Profile Info Grid -->
-    <div class="profile-grid">
-        <!-- Personal Information Card -->
-        <div class="info-card">
-            <h3>Personal Information</h3>
-            <div class="info-row">
-                <div class="info-label">Full Name</div>
-                <div class="info-value">{{ user.get_full_name|default:"Not set" }}</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">Email</div>
-                <div class="info-value">{{ user.email }}</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">Phone</div>
-                <div class="info-value">{{ user.profile.phone_number|default:"Not set" }}</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">Location</div>
-                <div class="info-value">{{ user.profile.location|default:"Not set" }}</div>
-            </div>
-        </div>
-        
-        <!-- Farm Information Card (for farmers) -->
-        {% if user.profile.role == 'farmer' and farmer_details %}
-        <div class="info-card">
-            <h3>Farm Information</h3>
-            <div class="info-row">
-                <div class="info-label">Farm Name</div>
-                <div class="info-value">{{ farmer_details.farm_name }}</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">Farm Location</div>
-                <div class="info-value">{{ farmer_details.farm_location }}</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">Farm Size</div>
-                <div class="info-value">{{ farmer_details.farm_size }} acres</div>
-            </div>
-            {% if farmer_details.certification %}
-            <div class="info-row">
-                <div class="info-label">Certification</div>
-                <div class="info-value">{{ farmer_details.certification }}</div>
-            </div>
-            {% endif %}
-        </div>
-        {% endif %}
-        
-        <!-- Buyer Information Card (for buyers) -->
-        {% if user.profile.role == 'buyer' and buyer_details %}
-        <div class="info-card">
-            <h3>Buyer Information</h3>
-            {% if buyer_details.company_name %}
-            <div class="info-row">
-                <div class="info-label">Company</div>
-                <div class="info-value">{{ buyer_details.company_name }}</div>
-            </div>
-            {% endif %}
-            {% if buyer_details.business_registration %}
-            <div class="info-row">
-                <div class="info-label">Business Reg</div>
-                <div class="info-value">{{ buyer_details.business_registration }}</div>
-            </div>
-            {% endif %}
-            {% if buyer_details.preferred_categories %}
-            <div class="info-row">
-                <div class="info-label">Preferences</div>
-                <div class="info-value">{{ buyer_details.preferred_categories }}</div>
-            </div>
-            {% endif %}
-        </div>
-        {% endif %}
-        
-        <!-- Statistics Card -->
-        <div class="info-card">
-            <h3>Statistics</h3>
-            {% if user.profile.role == 'farmer' %}
-            <div class="info-row">
-                <div class="info-label">Total Products</div>
-                <div class="info-value">{{ total_products|default:"0" }}</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">Orders Received</div>
-                <div class="info-value">{{ total_orders_received|default:"0" }}</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">Total Sales</div>
-                <div class="info-value">KES {{ total_sales|default:"0"|floatformat:0 }}</div>
-            </div>
-            {% elif user.profile.role == 'buyer' %}
-            <div class="info-row">
-                <div class="info-label">Total Orders</div>
-                <div class="info-value">{{ total_orders|default:"0" }}</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">Total Spent</div>
-                <div class="info-value">KES {{ total_spent|default:"0"|floatformat:0 }}</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">Member Since</div>
-                <div class="info-value">{{ user.date_joined|date:"F j, Y" }}</div>
-            </div>
-            {% endif %}
-        </div>
-        
-        <!-- Bio Card -->
-        <div class="info-card">
-            <h3>Bio</h3>
-            <div class="bio-text">
-                {% if user.profile.bio %}
-                    {{ user.profile.bio }}
-                {% else %}
-                    No bio provided yet. Click "Edit Profile" to add your bio.
-                {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
+<script>
+    function confirmDelete() {
+        if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+            window.location.href = "{% url 'accounts:delete_account' %}";
+        }
+    }
+</script>
 {% endblock %}

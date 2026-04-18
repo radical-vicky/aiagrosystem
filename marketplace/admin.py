@@ -14,6 +14,6 @@ class ProduceAdmin(admin.ModelAdmin):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ['order_number', 'buyer', 'produce', 'quantity', 'total_price', 'status', 'order_date']
-    list_filter = ['status', 'order_date']
-    search_fields = ['order_number', 'buyer__username']
+    list_display = ['order_number', 'buyer', 'produce', 'quantity', 'total_price', 'status', 'payment_status', 'order_date']
+    list_filter = ['status', 'payment_status', 'order_date']
+    search_fields = ['order_number', 'buyer__username', 'mpesa_receipt']

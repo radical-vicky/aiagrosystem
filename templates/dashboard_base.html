@@ -376,7 +376,7 @@
         <aside class="sidebar" id="sidebar">
             <!-- Fixed Header Section - Does NOT scroll -->
             <div class="sidebar-header">
-                <a href="{% url 'home' %}" class="sidebar-logo">AgroMarket AI</a>
+                <a href="/" class="sidebar-logo">AgroMarket AI</a>
             </div>
             
             <!-- Fixed User Profile Section - Does NOT scroll -->
@@ -410,14 +410,17 @@
             <nav class="sidebar-nav">
                 <div class="nav-section">
                     <div class="nav-section-title">MAIN</div>
-                    <a href="{% url 'dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <a href="/" class="nav-item">
+                        <span class="nav-item-text">Home</span>
+                    </a>
+                    <a href="/accounts/" class="nav-item">
                         <span class="nav-item-text">Dashboard</span>
                     </a>
-                    <a href="{% url 'marketplace' %}" class="nav-item">
+                    <a href="/marketplace/" class="nav-item">
                         <span class="nav-item-text">Marketplace</span>
                     </a>
                     {% if user.is_authenticated and user.profile.role == 'farmer' %}
-                    <a href="{% url 'my_listings' %}" class="nav-item">
+                    <a href="/accounts/listings/" class="nav-item">
                         <span class="nav-item-text">My Listings</span>
                     </a>
                     {% endif %}
@@ -426,38 +429,58 @@
                 <div class="nav-section">
                     <div class="nav-section-title">ORDERS</div>
                     {% if user.is_authenticated and user.profile.role == 'buyer' %}
-                    <a href="{% url 'my_orders' %}" class="nav-item">
+                    <a href="/accounts/orders/" class="nav-item">
                         <span class="nav-item-text">My Orders</span>
                     </a>
                     {% endif %}
                     {% if user.is_authenticated and user.profile.role == 'farmer' %}
-                    <a href="{% url 'received_orders' %}" class="nav-item">
+                    <a href="/accounts/received-orders/" class="nav-item">
                         <span class="nav-item-text">Orders Received</span>
                     </a>
                     {% endif %}
                 </div>
                 
                 <div class="nav-section">
+                    <div class="nav-section-title">VERIFICATION</div>
+                    {% if user.is_authenticated %}
+                    <a href="/accounts/verification-status/" class="nav-item">
+                        <span class="nav-item-text">Verification Status</span>
+                    </a>
+                    <a href="/accounts/verify-phone/" class="nav-item">
+                        <span class="nav-item-text">Verify Phone</span>
+                    </a>
+                    <a href="/accounts/upload-id/" class="nav-item">
+                        <span class="nav-item-text">Upload ID</span>
+                    </a>
+                    {% endif %}
+                </div>
+                
+                <div class="nav-section">
                     <div class="nav-section-title">INSIGHTS</div>
-                    <a href="{% url 'market_insights' %}" class="nav-item">
+                    <a href="/ai/insights/" class="nav-item">
                         <span class="nav-item-text">AI Predictions</span>
                     </a>
+                    {% if user.is_authenticated %}
+                    <a href="/accounts/stats/" class="nav-item">
+                        <span class="nav-item-text">Statistics</span>
+                    </a>
+                    {% endif %}
                 </div>
                 
                 <div class="nav-section">
                     <div class="nav-section-title">ACCOUNT</div>
-                    <a href="{% url 'profile' %}" class="nav-item">
+                    <a href="/accounts/profile/" class="nav-item">
                         <span class="nav-item-text">Profile</span>
                     </a>
                     {% if user.is_authenticated %}
-                    <a href="{% url 'account_logout' %}" class="nav-item">
+                    <a href="/accounts/logout/" class="nav-item">
                         <span class="nav-item-text">Sign Out</span>
                     </a>
                     {% else %}
-                    <a href="{% url 'account_login' %}" class="nav-item">
+                    <a href="/accounts/login/" class="nav-item">
                         <span class="nav-item-text">Sign In</span>
                     </a>
-                    <a href="{% url 'account_signup' %}" class="nav-item">
+                    <a href="/accounts/signup/" class="nav-item">
                         <span class="nav-item-text">Sign Up</span>
                     </a>
                     {% endif %}
@@ -478,7 +501,7 @@
                         <input type="text" placeholder="Search..." id="globalSearch">
                     </div>
                     {% if user.is_authenticated %}
-                    <div class="user-menu" onclick="window.location.href='{% url 'profile' %}'">
+                    <div class="user-menu" onclick="window.location.href='/accounts/profile/'">
                         <div class="user-menu-avatar">
                             {% if user.profile.profile_picture %}
                                 <img src="{{ user.profile.profile_picture.url }}" alt="{{ user.username }}">
@@ -489,7 +512,7 @@
                         <span>{{ user.username }}</span>
                     </div>
                     {% else %}
-                    <div class="user-menu" onclick="window.location.href='{% url 'account_login' %}'">
+                    <div class="user-menu" onclick="window.location.href='/accounts/login/'">
                         <div class="user-menu-avatar">
                             <span>G</span>
                         </div>

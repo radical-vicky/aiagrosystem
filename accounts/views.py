@@ -1,11 +1,16 @@
+# accounts/views.py
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.db.models import Sum, Count
 from django.http import JsonResponse
-from .models import UserProfile, FarmerProfile, BuyerProfile
-from .forms import UserProfileForm, FarmerProfileForm, BuyerProfileForm
+from django.utils import timezone
+from datetime import timedelta
+from .models import UserProfile, FarmerProfile, BuyerProfile, PhoneVerification, GovernmentID
+from .forms import UserProfileForm, FarmerProfileForm, BuyerProfileForm, PhoneVerificationForm, OTPVerificationForm, GovernmentIDForm
+from .utils import OTPService, IDVerificationService
 from marketplace.models import Produce, Order
 
 # ========== DASHBOARD & PROFILE VIEWS ==========
@@ -87,6 +92,8 @@ def profile_view(request):
     
     return render(request, 'accounts/profile.html', context)
 
+# accounts/views.py
+
 @login_required
 def edit_profile(request):
     """Edit user profile"""
@@ -108,9 +115,11 @@ def edit_profile(request):
         profile.save()
         
         messages.success(request, 'Profile updated successfully!')
-        return redirect('profile')
+        return redirect('accounts:profile')  # Change this line
     
     return render(request, 'accounts/edit_profile.html', {'profile': profile})
+
+
 
 @login_required
 def my_stats(request):
@@ -142,7 +151,20 @@ def my_stats(request):
 
 @login_required
 def become_farmer(request):
-    """Register as a farmer"""
+    """Register as a farmer with verification check"""
+    
+    # Check verification status
+    profile = request.user.profile
+    
+    # If not verified, redirect to verification
+    if not profile.phone_verified:
+        messages.warning(request, 'Please verify your phone number before becoming a farmer.')
+        return redirect('accounts:verify_phone')
+    
+    if not profile.id_verified:
+        messages.warning(request, 'Please verify your government ID before becoming a farmer.')
+        return redirect('upload_government_id')
+    
     if request.user.profile.role and request.user.profile.role != 'admin':
         messages.warning(request, f'You are already registered as a {request.user.profile.role}.')
         return redirect('dashboard')
@@ -150,6 +172,8 @@ def become_farmer(request):
     if request.method == 'POST':
         profile = request.user.profile
         profile.role = 'farmer'
+        profile.is_verified_farmer = True
+        profile.verification_level = 'fully_verified'
         profile.save()
         
         FarmerProfile.objects.create(
@@ -158,10 +182,11 @@ def become_farmer(request):
             farm_location=request.POST.get('farm_location'),
             farm_size=request.POST.get('farm_size'),
             certification=request.POST.get('certification', ''),
-            registration_number=request.POST.get('registration_number', '')
+            registration_number=request.POST.get('registration_number', ''),
+            is_verified=True
         )
         
-        messages.success(request, 'Successfully registered as a farmer! You can now list your produce for sale.')
+        messages.success(request, 'Successfully registered as a verified farmer! You can now list your produce for sale.')
         return redirect('dashboard')
     
     return render(request, 'accounts/become_farmer.html')
@@ -189,6 +214,226 @@ def become_buyer(request):
         return redirect('dashboard')
     
     return render(request, 'accounts/become_buyer.html')
+
+# ========== PHONE VERIFICATION VIEWS ==========
+
+@login_required
+def verify_phone(request):
+    """Step 1: Phone number verification with OTP"""
+    
+    # Check if already verified
+    if request.user.profile.phone_verified:
+        messages.info(request, 'Your phone is already verified.')
+        return redirect('accounts:verification_status')
+    
+    if request.method == 'POST':
+        form = PhoneVerificationForm(request.POST)
+        if form.is_valid():
+            phone_number = form.cleaned_data['phone_number']
+            
+            # Check if phone already used by another user
+            if PhoneVerification.objects.filter(phone_number=phone_number, is_verified=True).exclude(user=request.user).exists():
+                messages.error(request, 'This phone number is already verified by another user.')
+                return redirect('accounts:verify_phone')
+            
+            # Generate OTP
+            otp_code = OTPService.generate_otp()
+            
+            # Save or update verification record
+            verification, created = PhoneVerification.objects.update_or_create(
+                user=request.user,
+                defaults={
+                    'phone_number': phone_number,
+                    'otp_code': otp_code,
+                    'expires_at': timezone.now() + timedelta(minutes=10),
+                    'attempts': 0,
+                    'is_verified': False
+                }
+            )
+            
+            # Send OTP via SMS
+            success = OTPService.send_otp_via_sms(phone_number, otp_code)
+            
+            if success:
+                messages.success(request, f'OTP sent to {phone_number}. Valid for 10 minutes.')
+                request.session['verification_phone'] = phone_number
+                return redirect('accounts:verify_otp')  # FIXED: Added accounts: namespace
+            else:
+                messages.error(request, 'Failed to send OTP. Please try again.')
+    
+    else:
+        form = PhoneVerificationForm()
+    
+    return render(request, 'accounts/verify_phone.html', {'form': form})
+
+@login_required
+def verify_otp(request):
+    """Step 2: Verify OTP code"""
+    
+    phone_number = request.session.get('verification_phone')
+    if not phone_number:
+        messages.error(request, 'Please request OTP first.')
+        return redirect('accounts:verify_phone')
+    
+    verification = get_object_or_404(PhoneVerification, user=request.user, phone_number=phone_number)
+    
+    if verification.is_verified:
+        messages.info(request, 'Phone already verified.')
+        return redirect('accounts:verification_status')
+
+    
+    if verification.is_expired():
+        messages.error(request, 'OTP has expired. Please request a new one.')
+        verification.delete()
+        return redirect('accounts:verify_phone')
+    
+    if verification.attempts >= 5:
+        messages.error(request, 'Too many failed attempts. Please request a new OTP.')
+        verification.delete()
+        return redirect('accounts:verify_phone')
+    
+    if request.method == 'POST':
+        form = OTPVerificationForm(request.POST)
+        if form.is_valid():
+            otp_code = form.cleaned_data['otp_code']
+            
+            if verification.otp_code == otp_code:
+                # Mark as verified
+                verification.is_verified = True
+                verification.save()
+                
+                # Update user profile
+                profile = request.user.profile
+                profile.phone_verified = True
+                profile.verification_level = 'phone_verified'
+                profile.save()
+                
+                messages.success(request, 'Phone number verified successfully!')
+                
+                # Clean up session
+                del request.session['verification_phone']
+                
+                return redirect('accounts:verification_status')
+
+            else:
+                verification.attempts += 1
+                verification.save()
+                messages.error(request, f'Invalid OTP. {5 - verification.attempts} attempts remaining.')
+    
+    else:
+        form = OTPVerificationForm()
+    
+    return render(request, 'accounts/verify_otp.html', {
+        'form': form,
+        'phone_number': phone_number
+    })
+
+@login_required
+def resend_otp(request):
+    """Resend OTP code"""
+    
+    phone_number = request.session.get('verification_phone')
+    if not phone_number:
+        messages.error(request, 'Please request OTP first.')
+        return redirect('accounts:verify_phone')
+    
+    verification = PhoneVerification.objects.filter(user=request.user, phone_number=phone_number).first()
+    
+    if verification and not verification.is_verified:
+        # Generate new OTP
+        new_otp = OTPService.generate_otp()
+        verification.otp_code = new_otp
+        verification.expires_at = timezone.now() + timedelta(minutes=10)
+        verification.attempts = 0
+        verification.save()
+        
+        # Resend SMS
+        success = OTPService.send_otp_via_sms(phone_number, new_otp)
+        
+        if success:
+            messages.success(request, f'New OTP sent to {phone_number}')
+        else:
+            messages.error(request, 'Failed to send OTP. Please try again.')
+    
+    return redirect('accounts:verify_otp')  # FIXED: Added accounts: namespace
+# ========== ID VERIFICATION VIEWS ==========
+
+@login_required
+def upload_government_id(request):
+    """Step 3: Upload government ID for verification"""
+    
+    # Check if phone is verified first
+    if not request.user.profile.phone_verified:
+        messages.warning(request, 'Please verify your phone number first.')
+        return redirect('accounts:verify_phone')
+    
+    # Check if already uploaded
+    if hasattr(request.user.profile, 'government_id'):
+        if request.user.profile.government_id.status == 'approved':
+            messages.info(request, 'Your ID is already verified.')
+            return redirect('accounts:verification_status')
+        elif request.user.profile.government_id.status == 'pending':
+            messages.info(request, 'Your ID is pending review. Please wait.')
+            return redirect('accounts:verification_status')
+    
+    if request.method == 'POST':
+        form = GovernmentIDForm(request.POST, request.FILES)
+        if form.is_valid():
+            # Validate ID format
+            id_number = form.cleaned_data['id_number']
+            id_type = form.cleaned_data['id_type']
+            
+            if not IDVerificationService.validate_id_format(id_number, id_type):
+                messages.error(request, f'Invalid {dict(GovernmentID.ID_TYPES).get(id_type)} number format.')
+                return redirect('accounts:upload_government_id')  # FIXED: Added accounts: namespace
+            
+            # Save ID document
+            government_id = form.save(commit=False)
+            government_id.user_profile = request.user.profile
+            government_id.save()
+            
+            # Auto-approve for now (you can add API verification later)
+            government_id.status = 'approved'
+            government_id.save()
+            
+            # Update profile
+            profile = request.user.profile
+            profile.id_verified = True
+            profile.verification_level = 'id_verified'
+            profile.save()
+            
+            messages.success(request, 'Government ID verified successfully! You can now become a verified farmer.')
+            return redirect('accounts:verification_status')  # FIXED: Added accounts: namespace
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = GovernmentIDForm()
+    
+    return render(request, 'accounts/upload_id.html', {'form': form})
+
+
+@login_required
+def verification_status(request):
+    """Show verification status dashboard"""
+    
+    profile = request.user.profile
+    
+    # Get verification details
+    phone_verification = PhoneVerification.objects.filter(user=request.user).first()
+    id_verification = GovernmentID.objects.filter(user_profile=profile).first()
+    
+    context = {
+        'profile': profile,
+        'phone_verification': phone_verification,
+        'id_verification': id_verification,
+        'verification_levels': {
+            'email': True,  # Assume email is verified through registration
+            'phone': profile.phone_verified,
+            'id': profile.id_verified,
+        }
+    }
+    
+    return render(request, 'accounts/verification_status.html', context)
 
 # ========== AJAX UTILITY VIEWS ==========
 
@@ -272,8 +517,3 @@ def change_password(request):
         return redirect('account_login')
     
     return render(request, 'accounts/change_password.html')
-
-
-
-
-

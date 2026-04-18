@@ -31,18 +31,19 @@
             </div>
             {% endif %}
 
-            {% if form.errors %}
+            {% if form.non_field_errors %}
             <div class="glass-flash-error">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                     <path d="M8 0C3.58 0 0 3.58 0 8s3.58 8 8 8 8-3.58 8-8-3.58-8-8-8zm0 12c-.69 0-1.25-.56-1.25-1.25S7.31 9.5 8 9.5s1.25.56 1.25 1.25S8.69 12 8 12zm1-3.75c0 .69-.56 1.25-1.25 1.25h-.5c-.69 0-1.25-.56-1.25-1.25V4c0-.69.56-1.25 1.25-1.25h.5c.69 0 1.25.56 1.25 1.25v4.25z"/>
                 </svg>
-                Please correct the errors below.
+                {{ form.non_field_errors.0 }}
             </div>
             {% endif %}
 
-            <form method="POST" action="{% url 'account_signup' %}">
+            <form method="POST" action="{% url 'account_signup' %}" id="signupForm">
                 {% csrf_token %}
 
+                <!-- Username Field -->
                 <div class="form-group-modern">
                     <label class="form-label-modern">Username</label>
                     <input type="text" name="username" id="id_username" 
@@ -54,8 +55,10 @@
                     {% if form.username.errors %}
                     <small class="error-text">{{ form.username.errors.0 }}</small>
                     {% endif %}
+                    <div id="username-feedback" class="feedback-text"></div>
                 </div>
 
+                <!-- Email Field -->
                 <div class="form-group-modern">
                     <label class="form-label-modern">Email address</label>
                     <input type="email" name="email" id="id_email" 
@@ -66,8 +69,10 @@
                     {% if form.email.errors %}
                     <small class="error-text">{{ form.email.errors.0 }}</small>
                     {% endif %}
+                    <div id="email-feedback" class="feedback-text"></div>
                 </div>
 
+                <!-- Password Field -->
                 <div class="form-group-modern">
                     <label class="form-label-modern">Password</label>
                     <div class="password-wrapper">
@@ -86,8 +91,10 @@
                     <small class="error-text">{{ form.password1.errors.0 }}</small>
                     {% endif %}
                     <small class="hint-text">Password must be at least 8 characters</small>
+                    <div id="password-strength" class="password-strength-meter"></div>
                 </div>
 
+                <!-- Confirm Password Field -->
                 <div class="form-group-modern">
                     <label class="form-label-modern">Confirm Password</label>
                     <div class="password-wrapper">
@@ -105,21 +112,79 @@
                     {% if form.password2.errors %}
                     <small class="error-text">{{ form.password2.errors.0 }}</small>
                     {% endif %}
+                    <div id="password-match" class="feedback-text"></div>
                 </div>
 
+                <!-- Role Selection -->
                 <div class="form-group-modern">
                     <label class="form-label-modern">Account Type</label>
                     <div class="role-selector">
                         <label class="role-option">
-                            <input type="radio" name="role" value="buyer" checked>
+                            <input type="radio" name="role" value="buyer" id="role_buyer" {% if form.role.value == 'buyer' or not form.role.value %}checked{% endif %}>
                             <span class="role-label">Buyer</span>
                             <small class="role-desc">Purchase farm produce</small>
                         </label>
                         <label class="role-option">
-                            <input type="radio" name="role" value="farmer">
+                            <input type="radio" name="role" value="farmer" id="role_farmer" {% if form.role.value == 'farmer' %}checked{% endif %}>
                             <span class="role-label">Farmer</span>
                             <small class="role-desc">Sell your produce</small>
                         </label>
+                    </div>
+                    {% if form.role.errors %}
+                    <small class="error-text">{{ form.role.errors.0 }}</small>
+                    {% endif %}
+                </div>
+
+                <!-- DYNAMIC FARMER FIELDS (Hidden by default, shown when farmer is selected) -->
+                <div id="farmer-fields" style="display: none;" class="">
+                    <div class="farmer-fields-divider">
+                        <span>Farm Information</span>
+                    </div>
+                    
+                    <!-- Farm Name -->
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Farm Name <span class="required-star">*</span></label>
+                        <input type="text" name="farm_name" id="id_farm_name" 
+                               placeholder="e.g., Green Acres Farm"
+                               class="form-control-modern">
+                        <small class="hint-text">What is the name of your farm?</small>
+                    </div>
+
+                    <!-- Farm Location -->
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Farm Location <span class="required-star">*</span></label>
+                        <input type="text" name="farm_location" id="id_farm_location" 
+                               placeholder="City, State, or GPS coordinates"
+                               class="form-control-modern">
+                        <small class="hint-text">Where is your farm located?</small>
+                    </div>
+
+                    <!-- Farm Size -->
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Farm Size (acres) <span class="required-star">*</span></label>
+                        <input type="number" name="farm_size" id="id_farm_size" 
+                               placeholder="e.g., 10.5"
+                               step="0.01"
+                               class="form-control-modern">
+                        <small class="hint-text">Total farm size in acres</small>
+                    </div>
+
+                    <!-- Certification (Optional) -->
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Certification (Optional)</label>
+                        <input type="text" name="certification" id="id_certification" 
+                               placeholder="e.g., Organic, GAP Certified"
+                               class="form-control-modern">
+                        <small class="hint-text">Any farming certifications you hold</small>
+                    </div>
+
+                    <!-- Registration Number (Optional) -->
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Farm Registration Number (Optional)</label>
+                        <input type="text" name="registration_number" id="id_registration_number" 
+                               placeholder="Enter registration number if applicable"
+                               class="form-control-modern">
+                        <small class="hint-text">Government or cooperative registration number</small>
                     </div>
                 </div>
 
@@ -127,7 +192,7 @@
                 <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}">
                 {% endif %}
 
-                <button type="submit" class="btn-green-full">
+                <button type="submit" class="btn-green-full" id="submitBtn">
                     Create Account
                 </button>
             </form>
@@ -264,6 +329,11 @@
     color: #24292f;
 }
 
+.required-star {
+    color: #dc3545;
+    font-size: 1rem;
+}
+
 .form-control-modern {
     width: 100%;
     padding: 0.7rem 1rem;
@@ -280,6 +350,10 @@
     border-color: #296807;
     box-shadow: 0 0 0 3px rgba(41, 104, 7, 0.15);
     background: rgba(255, 255, 255, 0.95);
+}
+
+.form-control-modern.error {
+    border-color: #dc3545;
 }
 
 /* Password Wrapper */
@@ -317,7 +391,7 @@
     display: block;
 }
 
-/* Error and Hint Text */
+/* Feedback Text */
 .error-text {
     display: block;
     font-size: 0.7rem;
@@ -330,6 +404,55 @@
     font-size: 0.7rem;
     color: #57606a;
     margin-top: 0.3rem;
+}
+
+.feedback-text {
+    display: block;
+    font-size: 0.7rem;
+    margin-top: 0.3rem;
+}
+
+.feedback-text.valid {
+    color: #28a745;
+}
+
+.feedback-text.invalid {
+    color: #dc3545;
+}
+
+/* Password Strength Meter */
+.password-strength-meter {
+    height: 3px;
+    background: #e9ecef;
+    border-radius: 3px;
+    margin-top: 0.5rem;
+    overflow: hidden;
+}
+
+.strength-bar {
+    height: 100%;
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+.strength-bar.weak {
+    width: 25%;
+    background: #dc3545;
+}
+
+.strength-bar.fair {
+    width: 50%;
+    background: #ffc107;
+}
+
+.strength-bar.good {
+    width: 75%;
+    background: #17a2b8;
+}
+
+.strength-bar.strong {
+    width: 100%;
+    background: #28a745;
 }
 
 /* Role Selector */
@@ -378,6 +501,50 @@
     color: #57606a;
 }
 
+/* Farmer Fields Divider */
+.farmer-fields-divider {
+    text-align: center;
+    margin: 1.5rem 0 1rem;
+    position: relative;
+}
+
+.farmer-fields-divider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(41, 104, 7, 0.3), transparent);
+}
+
+.farmer-fields-divider span {
+    background: rgba(255, 255, 255, 0.85);
+    padding: 0 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #296807;
+    position: relative;
+    z-index: 1;
+}
+
+/* Animation for farmer fields */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#farmer-fields.show {
+    display: block;
+    animation: slideDown 0.3s ease;
+}
+
 /* Sign Up Button - Green */
 .btn-green-full {
     width: 100%;
@@ -393,10 +560,15 @@
     margin-top: 0.5rem;
 }
 
-.btn-green-full:hover {
+.btn-green-full:hover:not(:disabled) {
     background: #1f5205;
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(41, 104, 7, 0.3);
+}
+
+.btn-green-full:disabled {
+    background: #95a5a6;
+    cursor: not-allowed;
 }
 
 /* Error Message */
@@ -506,41 +678,258 @@
 </style>
 
 <script>
-    // Toggle password visibility for all password fields
-    const toggleButtons = document.querySelectorAll('.toggle-password');
+    // Debug function to check if elements exist
+    function debugElements() {
+        console.log('=== Debug Info ===');
+        console.log('farmer-fields element:', document.getElementById('farmer-fields'));
+        console.log('role_farmer element:', document.getElementById('role_farmer'));
+        console.log('role_buyer element:', document.getElementById('role_buyer'));
+        console.log('id_farm_name element:', document.getElementById('id_farm_name'));
+        console.log('id_farm_location element:', document.getElementById('id_farm_location'));
+        console.log('id_farm_size element:', document.getElementById('id_farm_size'));
+    }
     
-    toggleButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const targetId = this.getAttribute('data-target');
-            const passwordInput = document.getElementById(targetId);
-            let isVisible = passwordInput.type === 'text';
+    // Wait for DOM to be fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM fully loaded');
+        debugElements();
+        
+        // Toggle password visibility for all password fields
+        const toggleButtons = document.querySelectorAll('.toggle-password');
+        
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-target');
+                const passwordInput = document.getElementById(targetId);
+                let isVisible = passwordInput.type === 'text';
+                
+                if (isVisible) {
+                    passwordInput.type = 'password';
+                    this.innerHTML = `<svg class="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>`;
+                } else {
+                    passwordInput.type = 'text';
+                    this.innerHTML = `<svg class="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <line x1="3" y1="3" x2="21" y2="21"></line>
+                    </svg>`;
+                }
+            });
+        });
+        
+        // Make role cards clickable
+        const roleOptions = document.querySelectorAll('.role-option');
+        roleOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                const radio = this.querySelector('input[type="radio"]');
+                if (radio) {
+                    radio.checked = true;
+                    // Manually trigger the change event
+                    const changeEvent = new Event('change', { bubbles: true });
+                    radio.dispatchEvent(changeEvent);
+                    console.log('Radio clicked:', radio.value);
+                }
+            });
+        });
+        
+        // Show/Hide Farmer Fields based on role selection
+        const farmerFields = document.getElementById('farmer-fields');
+        const roleFarmer = document.getElementById('role_farmer');
+        const roleBuyer = document.getElementById('role_buyer');
+        const farmNameInput = document.getElementById('id_farm_name');
+        const farmLocationInput = document.getElementById('id_farm_location');
+        const farmSizeInput = document.getElementById('id_farm_size');
+        
+        function toggleFarmerFields() {
+            console.log('toggleFarmerFields called');
+            console.log('roleFarmer checked:', roleFarmer ? roleFarmer.checked : 'roleFarmer not found');
             
-            if (isVisible) {
-                passwordInput.type = 'password';
-                this.innerHTML = `<svg class="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                    <circle cx="12" cy="12" r="3"></circle>
-                </svg>`;
+            if (roleFarmer && roleFarmer.checked) {
+                console.log('Showing farmer fields');
+                farmerFields.classList.add('show');
+                farmerFields.style.display = 'block';
+                // Make farmer fields required
+                if (farmNameInput) farmNameInput.required = true;
+                if (farmLocationInput) farmLocationInput.required = true;
+                if (farmSizeInput) farmSizeInput.required = true;
             } else {
-                passwordInput.type = 'text';
-                this.innerHTML = `<svg class="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                    <circle cx="12" cy="12" r="3"></circle>
-                    <line x1="3" y1="3" x2="21" y2="21"></line>
-                </svg>`;
+                console.log('Hiding farmer fields');
+                farmerFields.classList.remove('show');
+                farmerFields.style.display = 'none';
+                // Remove required attribute
+                if (farmNameInput) farmNameInput.required = false;
+                if (farmLocationInput) farmLocationInput.required = false;
+                if (farmSizeInput) farmSizeInput.required = false;
             }
-        });
-    });
-    
-    // Make role cards clickable
-    const roleOptions = document.querySelectorAll('.role-option');
-    roleOptions.forEach(option => {
-        option.addEventListener('click', function() {
-            const radio = this.querySelector('input[type="radio"]');
-            if (radio) {
-                radio.checked = true;
+        }
+        
+        if (roleFarmer && roleBuyer) {
+            console.log('Adding event listeners to radio buttons');
+            roleFarmer.addEventListener('change', toggleFarmerFields);
+            roleBuyer.addEventListener('change', toggleFarmerFields);
+            // Check initial state
+            toggleFarmerFields();
+        } else {
+            console.error('Radio buttons not found!');
+        }
+        
+        // Real-time validation
+        const usernameInput = document.getElementById('id_username');
+        const emailInput = document.getElementById('id_email');
+        const password1Input = document.getElementById('id_password1');
+        const password2Input = document.getElementById('id_password2');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        function checkUsername() {
+            const username = usernameInput.value;
+            const feedback = document.getElementById('username-feedback');
+            
+            if (username.length < 3) {
+                feedback.textContent = 'Username must be at least 3 characters';
+                feedback.className = 'feedback-text invalid';
+                return false;
             }
-        });
+            
+            if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+                feedback.textContent = 'Username can only contain letters, numbers, and underscores';
+                feedback.className = 'feedback-text invalid';
+                return false;
+            }
+            
+            // Check availability via AJAX
+            fetch(`/accounts/check-username/?username=${encodeURIComponent(username)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.exists) {
+                        feedback.textContent = 'Username already taken';
+                        feedback.className = 'feedback-text invalid';
+                    } else {
+                        feedback.textContent = 'Username available';
+                        feedback.className = 'feedback-text valid';
+                    }
+                })
+                .catch(error => console.error('Error checking username:', error));
+            
+            return true;
+        }
+        
+        function checkEmail() {
+            const email = emailInput.value;
+            const feedback = document.getElementById('email-feedback');
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            
+            if (!emailRegex.test(email)) {
+                feedback.textContent = 'Please enter a valid email address';
+                feedback.className = 'feedback-text invalid';
+                return false;
+            }
+            
+            // Check availability via AJAX
+            fetch(`/accounts/check-email/?email=${encodeURIComponent(email)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.exists) {
+                        feedback.textContent = 'Email already registered';
+                        feedback.className = 'feedback-text invalid';
+                    } else {
+                        feedback.textContent = 'Email available';
+                        feedback.className = 'feedback-text valid';
+                    }
+                })
+                .catch(error => console.error('Error checking email:', error));
+            
+            return true;
+        }
+        
+        function checkPasswordStrength() {
+            const password = password1Input.value;
+            let strength = 0;
+            
+            if (password.length >= 8) strength++;
+            if (password.match(/[a-z]+/)) strength++;
+            if (password.match(/[A-Z]+/)) strength++;
+            if (password.match(/[0-9]+/)) strength++;
+            if (password.match(/[$@#&!]+/)) strength++;
+            
+            const meter = document.getElementById('password-strength');
+            meter.innerHTML = '<div class="strength-bar"></div>';
+            const bar = meter.querySelector('.strength-bar');
+            
+            if (strength <= 2) {
+                bar.className = 'strength-bar weak';
+            } else if (strength === 3) {
+                bar.className = 'strength-bar fair';
+            } else if (strength === 4) {
+                bar.className = 'strength-bar good';
+            } else {
+                bar.className = 'strength-bar strong';
+            }
+            
+            return strength >= 3;
+        }
+        
+        function checkPasswordMatch() {
+            const password1 = password1Input.value;
+            const password2 = password2Input.value;
+            const feedback = document.getElementById('password-match');
+            
+            if (password2.length === 0) {
+                feedback.textContent = '';
+                return false;
+            }
+            
+            if (password1 === password2) {
+                feedback.textContent = 'Passwords match';
+                feedback.className = 'feedback-text valid';
+                return true;
+            } else {
+                feedback.textContent = 'Passwords do not match';
+                feedback.className = 'feedback-text invalid';
+                return false;
+            }
+        }
+        
+        function validateFarmerFields() {
+            if (roleFarmer && roleFarmer.checked) {
+                const farmName = farmNameInput ? farmNameInput.value : '';
+                const farmLocation = farmLocationInput ? farmLocationInput.value : '';
+                const farmSize = farmSizeInput ? farmSizeInput.value : '';
+                
+                if (!farmName) return false;
+                if (!farmLocation) return false;
+                if (!farmSize || farmSize <= 0) return false;
+            }
+            return true;
+        }
+        
+        function validateForm() {
+            const usernameValid = usernameInput.value.length >= 3;
+            const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value);
+            const passwordStrong = checkPasswordStrength();
+            const passwordMatch = checkPasswordMatch();
+            const farmerValid = validateFarmerFields();
+            
+            const isFormValid = usernameValid && emailValid && passwordStrong && passwordMatch && farmerValid;
+            submitBtn.disabled = !isFormValid;
+            
+            console.log('Form validation:', { usernameValid, emailValid, passwordStrong, passwordMatch, farmerValid, isFormValid });
+        }
+        
+        if (usernameInput) usernameInput.addEventListener('input', () => { checkUsername(); validateForm(); });
+        if (emailInput) emailInput.addEventListener('input', () => { checkEmail(); validateForm(); });
+        if (password1Input) password1Input.addEventListener('input', () => { checkPasswordStrength(); checkPasswordMatch(); validateForm(); });
+        if (password2Input) password2Input.addEventListener('input', () => { checkPasswordMatch(); validateForm(); });
+        
+        // Add validation for farmer fields
+        if (farmNameInput) farmNameInput.addEventListener('input', validateForm);
+        if (farmLocationInput) farmLocationInput.addEventListener('input', validateForm);
+        if (farmSizeInput) farmSizeInput.addEventListener('input', validateForm);
+        
+        // Initial validation
+        validateForm();
     });
 </script>
 {% endblock %}
